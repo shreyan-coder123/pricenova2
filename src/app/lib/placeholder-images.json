@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Futuristic abstract tech background",
+      "imageUrl": "https://picsum.photos/seed/pricenova-hero/1200/800",
+      "imageHint": "abstract futuristic"
+    },
+    {
+      "id": "premium-bg",
+      "description": "Dark luxury background with neon lights",
+      "imageUrl": "https://picsum.photos/seed/pricenova-premium/800/600",
+      "imageHint": "cyberpunk city"
+    }
+  ]
+}
