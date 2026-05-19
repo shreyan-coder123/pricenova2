@@ -1,4 +1,3 @@
-
 'use client';
 
 const USAGE_KEY = 'pricenova_usage_v1';
@@ -29,6 +28,11 @@ export function isPro(): boolean {
 export function setProStatus(token: string) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(PRO_TOKEN_KEY, token);
+}
+
+export function clearProStatus() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(PRO_TOKEN_KEY);
 }
 
 export function canSearch(): boolean {

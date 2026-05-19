@@ -1,10 +1,9 @@
-
 'use client';
 
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchUsage } from '@/hooks/use-search-usage';
-import { setProStatus } from '@/lib/usage';
+import { setProStatus, clearProStatus } from '@/lib/usage';
 import { useToast } from '@/hooks/use-toast';
 
 export function PricingSection() {
@@ -27,6 +26,15 @@ export function PricingSection() {
         description: "Unlimited searches activated. Experience the future.",
       });
     }, 2000);
+  };
+
+  const handleCancelPro = () => {
+    clearProStatus();
+    window.dispatchEvent(new Event('storage'));
+    toast({
+      title: "Subscription Cancelled",
+      description: "You have been reverted to the free plan.",
+    });
   };
 
   return (
@@ -70,13 +78,27 @@ export function PricingSection() {
             <PricingItem text="Fastest scraping priority" pro />
             <PricingItem text="Spec normalization" pro />
           </ul>
-          <Button 
-            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
-            onClick={handleUpgrade}
-            disabled={isProUser}
-          >
-            {isProUser ? 'PRO Active' : 'Upgrade to PRO'}
-          </Button>
+          
+          <div className="space-y-4">
+            <Button 
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+              onClick={handleUpgrade}
+              disabled={isProUser}
+            >
+              {isProUser ? 'PRO Active' : 'Upgrade to PRO'}
+            </Button>
+            
+            {isProUser && (
+              <Button 
+                variant="ghost" 
+                className="w-full text-muted-foreground hover:text-destructive transition-colors text-xs"
+                onClick={handleCancelPro}
+              >
+                <XCircle className="w-3 h-3 mr-2" />
+                Cancel Pro Subscription
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </section>
