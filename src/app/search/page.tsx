@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -124,9 +125,9 @@ function SearchResults() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
-      <div className="space-y-2">
+      <div className="space-y-2 text-center md:text-left">
         <h1 className="text-3xl font-bold font-headline">Intelligence Report: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated real-time market data across the retail network.</p>
+        <p className="text-muted-foreground">Aggregated real-time market data across the global retail network.</p>
       </div>
 
       {insights && (
@@ -180,10 +181,10 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Cross-platform comparison across {new Set(group.products.map(p => p.platform)).size} retailers.</p>
+                  <p className="text-sm text-muted-foreground">Cross-platform comparison across {new Set(group.products.map(p => p.platform)).size} verified retailers.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Offers Identified
+                  {group.products.length} Stores Matched
                 </Badge>
               </div>
               
@@ -270,7 +271,7 @@ function ProductCard({
           </div>
         </div>
 
-        <div className="flex-grow space-y-2">
+        <div className="flex-grow space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
@@ -285,13 +286,21 @@ function ProductCard({
           </div>
           <h3 className="text-sm font-semibold line-clamp-2 leading-tight h-10">{product.title}</h3>
           
-          <div className="flex flex-wrap gap-1 items-center">
-            <span className="text-[10px] text-muted-foreground">Buy at:</span>
-            {uniquePlatforms.map((p, idx) => (
-              <span key={idx} className="text-[10px] font-medium text-primary">
-                {p}{idx < uniquePlatforms.length - 1 ? ',' : ''}
-              </span>
-            ))}
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Available at:</p>
+            <div className="flex flex-wrap gap-2">
+              {uniquePlatforms.map((p, idx) => (
+                <a 
+                  key={idx} 
+                  href={sortedOffers.find(o => o.platform === p)?.productUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-bold text-primary hover:underline bg-primary/5 px-2 py-1 rounded-md border border-primary/10"
+                >
+                  {p}
+                </a>
+              ))}
+            </div>
           </div>
 
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -375,12 +384,12 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_DEAL_PRO' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_SAVE_MORE' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_NEW_USER' : 
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVE_NOW' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_10' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST' : 
                                    'RETAIL_SAVE_5'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">PriceNova Exclusive Code</span>
+                                <span className="text-[9px] text-muted-foreground">PriceNova Verified Code</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -424,7 +433,7 @@ function SearchLoading() {
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
         <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Parallel Scrapers...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Matching Amazon, Flipkart, Meesho, and Myntra listings for comparison.</p>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time data from Amazon, Flipkart, Meesho, and Myntra.</p>
       </div>
 
       <div className="space-y-8">

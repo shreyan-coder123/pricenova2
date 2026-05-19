@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
@@ -52,12 +53,12 @@ const productMatchingPrompt = ai.definePrompt({
   prompt: `You are the Lead Data Scientist for PriceNova. 
 Your ABSOLUTE MISSION is to consolidate IDENTICAL physical products across DIFFERENT platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, Croma, Nykaa, etc.) into a SINGLE group.
 
-CRITICAL RULES:
-1. **CROSS-PLATFORM MANDATE**: If a product exists on Amazon and a similar one on Flipkart/Meesho, they MUST be in the same group. The user wants to compare these stores side-by-side.
-2. **IGNORE VARIANT NOISE**: Ignore text like "Pack of 1", "Pack of 2", "Free Delivery", "New Arrival", or seller-specific codes. If the core hardware or item is the same, group them.
-3. **FUZZY BRAND MATCHING**: Brands might be spelled differently or include store names (e.g., "Samsung Store" vs "Samsung Mobile"). Treat them as the same brand.
-4. **MODEL MATCHING**: Prioritize grouping by model name (e.g., "iPhone 16", "RTX 4060", "Sony WH-1000XM5"). 
-5. **FORCE DIVERSITY**: Do not create separate groups for Amazon and Flipkart if the item is the same. Consolidate them so the user sees Amazon, Flipkart, and Meesho listings together for every single product group.
+CRITICAL GROUPING RULES:
+1. **ULTRA-FUZZY MATCHING**: Titles on Amazon, Flipkart, and Meesho are often different for the SAME item. Ignore text like "Pack of 1", "Official Global Store", "Online Best Deal", or seller codes. 
+2. **CROSS-PLATFORM MANDATE**: If a product exists on Amazon and a similar one on Flipkart or Meesho, they MUST be in the same group. Do NOT create separate groups for different stores. 
+3. **MODEL IDENTIFICATION**: Prioritize model numbers, storage capacities (e.g., "128GB"), and colors. If the core hardware or product is identical, group them regardless of the platform title variation.
+4. **FORCE DIVERSITY**: The user wants to see at least 3 unique platforms (Amazon, Flipkart, Meesho, etc.) side-by-side for every group. 
+5. **IGNORE VARIANT NOISE**: Brands might include store names (e.g., "Samsung Store" vs "Samsung Mobile"). Treat them as the same brand.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -66,7 +67,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. GROUP EXTREMELY AGGRESSIVELY to ensure the user sees price comparisons across at least 3 unique platforms (Amazon, Flipkart, Meesho, etc.) for every product.`
+Return the groups. GROUP EXTREMELY AGGRESSIVELY to ensure the user sees price comparisons across at least 3 unique platforms for every product group.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
