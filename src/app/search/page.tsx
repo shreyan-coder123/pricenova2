@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -10,7 +9,7 @@ import { aiShoppingInsights, AIShoppingInsightsOutput } from '@/ai/flows/ai-shop
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
