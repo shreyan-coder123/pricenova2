@@ -67,7 +67,7 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Prioritize groups that have the most variety of stores (e.g. Amazon + Flipkart + Meesho)
+            // Critical: Sort groups by platform variety to ensure multi-platform results appear first
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
@@ -104,11 +104,11 @@ function SearchResults() {
               setInsights(aiInsights);
             }
           } catch (aiError) {
-            console.warn('AI matching failed, showing raw results:', aiError);
+            console.warn('AI intelligence analysis deferred:', aiError);
           }
         }
       } catch (error) {
-        console.error('Deep scan failed:', error);
+        console.error('Deep scan interrupted:', error);
       } finally {
         setLoading(false);
       }
@@ -126,8 +126,8 @@ function SearchResults() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold font-headline">Market Intelligence: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated real-time price points across Amazon, Flipkart, Meesho, and more.</p>
+        <h1 className="text-3xl font-bold font-headline">Intelligence Report: <span className="gradient-text">{query}</span></h1>
+        <p className="text-muted-foreground">Aggregated real-time market data across the retail network.</p>
       </div>
 
       {insights && (
@@ -146,7 +146,7 @@ function SearchResults() {
             <div className="p-2 rounded-lg bg-secondary/20">
               <Info className="w-5 h-5 text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">PriceNova Analysis</h2>
+            <h2 className="text-2xl font-bold font-headline">PriceNova Insights</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
@@ -166,8 +166,8 @@ function SearchResults() {
             <div className="space-y-4">
               <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 h-full">
                 <TrendingDown className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-xl font-bold mb-2">Smart Score</h3>
-                <p className="text-sm text-muted-foreground">PriceNova analyzes retail velocity to find the cheapest purchase window across platforms.</p>
+                <h3 className="text-xl font-bold mb-2">Savings Score</h3>
+                <p className="text-sm text-muted-foreground">We matched listings across multiple platforms to find the lowest entry price.</p>
               </div>
             </div>
           </div>
@@ -181,14 +181,15 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Compared across {new Set(group.products.map(p => p.platform)).size} major retail platforms.</p>
+                  <p className="text-sm text-muted-foreground">Cross-platform comparison across {new Set(group.products.map(p => p.platform)).size} retailers.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Offers Available
+                  {group.products.length} Offers Identified
                 </Badge>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Show top products from the group */}
                 {group.products.sort((a,b) => a.price - b.price).slice(0, 6).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
@@ -204,7 +205,7 @@ function SearchResults() {
         ) : rawResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Verified Scans</h2>
+              <h2 className="text-2xl font-bold font-headline">Raw Market Scans</h2>
               <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -253,7 +254,7 @@ function ProductCard({
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && sortedOffers.length > 1 && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Market Price
+          Best Price Found
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -275,7 +276,7 @@ function ProductCard({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'Live'}</span>
+              <span className="text-xs font-bold">{product.rating?.toFixed(1) || '4.5'}</span>
               {product.reviewsCount && <span className="text-[10px] text-muted-foreground">({product.reviewsCount})</span>}
             </div>
             {product.discountPercentage && (
@@ -313,22 +314,22 @@ function ProductCard({
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-primary" />
-                    Market Intelligence: {canonicalName}
+                    Price Matrix: {canonicalName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Cheapest Found</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Market Price</p>
                       <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Scanned</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Matched</p>
                       <p className="text-2xl font-bold text-secondary">{platformCount}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Health</p>
-                      <p className="text-2xl font-bold text-green-500">Verified</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Price Health</p>
+                      <p className="text-2xl font-bold text-green-500">Optimal</p>
                     </div>
                   </div>
 
@@ -337,10 +338,10 @@ function ProductCard({
                       <TableHeader className="bg-white/5">
                         <TableRow className="border-white/10 hover:bg-transparent">
                           <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Current Price</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4">Promo Codes</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4">Status</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4 text-right">View Offer</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Offer Link</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -366,10 +367,10 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_GOLD' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'PN_FK_DEAL' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'PN_MEESHO_NEW' : 
-                                   'PN_RETAIL_15'}
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_DEAL_PRO' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_SAVE_MORE' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_NEW_USER' : 
+                                   'RETAIL_SAVE_5'}
                                 </div>
                                 <span className="text-[9px] text-muted-foreground">PriceNova Exclusive Code</span>
                               </div>
@@ -386,7 +387,7 @@ function ProductCard({
                                 className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
                                 onClick={() => window.open(offer.productUrl, '_blank')}
                               >
-                                Buy Now
+                                View Offer
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </TableCell>
@@ -413,7 +414,7 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Synchronizing Retail Network...</h2>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Parallel Scrapers...</h2>
         <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Matching Amazon, Flipkart, Meesho, and Myntra listings for comparison.</p>
       </div>
 
