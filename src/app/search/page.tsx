@@ -10,9 +10,24 @@ import { aiShoppingInsights, AIShoppingInsightsOutput } from '@/ai/flows/ai-shop
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search } from 'lucide-react';
+import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function SearchPage() {
   return (
@@ -41,14 +56,11 @@ function SearchResults() {
     async function fetchData() {
       setLoading(true);
       try {
-        // Increment usage count locally
         incrementUsage();
 
-        // 1. Fetch Real Data via SerpApi
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
-        // 2. AI Product Matching (Attempt to group identical products)
         if (scraped.length > 0) {
           try {
             const matched = await aiProductMatching({
@@ -57,7 +69,6 @@ function SearchResults() {
             });
             setMatchingResults(matched);
 
-            // 3. AI Shopping Insights
             if (matched.matchedProductGroups.length > 0) {
               const insightInput = matched.matchedProductGroups.flatMap(group => 
                 group.products.map(p => ({
@@ -110,7 +121,6 @@ function SearchResults() {
         <p className="text-muted-foreground">Aggregated real-time offers across the global retail network.</p>
       </div>
 
-      {/* AI Insights Section */}
       {insights && (
         <div className={`relative p-8 rounded-3xl bg-secondary/5 border border-secondary/20 space-y-6 ${!isProUser ? 'blur-sm select-none pointer-events-none' : ''}`}>
           {!isProUser && (
@@ -155,7 +165,6 @@ function SearchResults() {
         </div>
       )}
 
-      {/* Results Grid */}
       <div className="space-y-12">
         {matchingResults && matchingResults.matchedProductGroups.length > 0 ? (
           matchingResults.matchedProductGroups.map((group, groupIdx) => (
@@ -167,7 +176,13 @@ function SearchResults() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
-                  <ProductCard key={pIdx} product={product} isBestDeal={pIdx === 0} />
+                  <ProductCard 
+                    key={pIdx} 
+                    product={product} 
+                    isBestDeal={pIdx === 0} 
+                    allOffers={group.products}
+                    canonicalName={group.canonicalProductName}
+                  />
                 ))}
               </div>
             </div>
@@ -199,7 +214,17 @@ function SearchResults() {
   );
 }
 
-function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolean }) {
+function ProductCard({ 
+  product, 
+  isBestDeal, 
+  allOffers, 
+  canonicalName 
+}: { 
+  product: any, 
+  isBestDeal: boolean, 
+  allOffers?: any[], 
+  canonicalName?: string 
+}) {
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && (
@@ -249,13 +274,65 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
             </div>
             <div className="text-2xl font-bold tracking-tight">₹{product.price.toLocaleString()}</div>
           </div>
-          <Button 
-            onClick={() => window.open(product.productUrl, '_blank')}
-            className="rounded-lg h-10 px-4 bg-white/10 hover:bg-primary hover:text-primary-foreground group-hover:neon-glow"
-          >
-            Visit
-            <ExternalLink className="w-3 h-3 ml-2" />
-          </Button>
+          
+          <div className="flex gap-2">
+            {allOffers && allOffers.length > 1 ? (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="rounded-lg h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
+                  >
+                    Compare
+                    <ArrowRightLeft className="w-3 h-3 ml-2" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl bg-card border-white/10">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold font-headline">Price Comparison: {canonicalName}</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4">
+                    <Table>
+                      <TableHeader className="bg-white/5">
+                        <TableRow className="border-white/10">
+                          <TableHead className="text-xs font-bold uppercase">Store</TableHead>
+                          <TableHead className="text-xs font-bold uppercase">Condition/Stock</TableHead>
+                          <TableHead className="text-xs font-bold uppercase text-right">Price</TableHead>
+                          <TableHead className="text-xs font-bold uppercase text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allOffers.sort((a,b) => a.price - b.price).map((offer, idx) => (
+                          <TableRow key={idx} className="border-white/5 hover:bg-white/5 transition-colors">
+                            <TableCell className="font-semibold">{offer.platform}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{offer.stockStatus || 'In Stock'}</TableCell>
+                            <TableCell className="text-right font-bold text-primary">₹{offer.price.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 hover:bg-primary hover:text-primary-foreground"
+                                onClick={() => window.open(offer.productUrl, '_blank')}
+                              >
+                                Buy <ExternalLink className="w-3 h-3 ml-1" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <Button 
+                onClick={() => window.open(product.productUrl, '_blank')}
+                className="rounded-lg h-10 px-4 bg-white/10 hover:bg-primary hover:text-primary-foreground group-hover:neon-glow"
+              >
+                Go to Store
+                <ExternalLink className="w-3 h-3 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
