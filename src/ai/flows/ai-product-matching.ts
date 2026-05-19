@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
@@ -53,33 +54,23 @@ const productMatchingPrompt = ai.definePrompt({
   name: 'productMatchingPrompt',
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
-  prompt: `You are an intelligent AI product matching engine for an e-commerce comparison website called PriceNova.
-Your task is to identify and group identical physical products from a list of scraped product data, even if their titles, descriptions, or other details differ across various online stores.
-Your goal is to normalize product names and consolidate all offers for the same item into distinct groups.
+  prompt: `You are an intelligent AI product matching engine for PriceNova.
+Your CRITICAL task is to group IDENTICAL physical products across different platforms (Amazon, Flipkart, Meesho, Meesho India, Croma, etc.).
 
-User's original search query: "{{{productQuery}}}"
+Strict Matching Guidelines:
+1. If two products have the same model name, specifications (e.g., "8GB RAM, 128GB Storage"), and color, they MUST be in the same group.
+2. Be aggressive in grouping. Small differences in titles (e.g., "Apple iPhone 16" vs "iPhone 16 (Black)") should still result in a group if it's clearly the same device.
+3. Your goal is to provide a comprehensive comparison. If you find multiple listings for the same item, group them so the user can see all store options in one place.
+4. If a query is "Sony A7R V", group all listings of that camera from all platforms together.
 
-Here is the scraped product data from various e-commerce platforms. Each item includes its platform, title, price, image URL, and product URL, along with other available details:
+User's search: "{{{productQuery}}}"
 
+Product Data to Analyze:
 {{#each scrapedProducts}}
-Platform: {{this.platform}}
-Title: {{{this.title}}}
-Price: {{this.price}}
-Original Price: {{this.originalPrice}}
-Discount: {{this.discountPercentage}}
-Rating: {{this.rating}} ({{this.reviewsCount}} reviews)
-Seller: {{this.seller}}
-Delivery: {{this.deliveryDetails}}
-Stock: {{this.stockStatus}}
-Image URL: {{this.imageUrl}}
-Product URL: {{this.productUrl}}
----
+Store: {{this.platform}} | Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Based on the above data, identify groups of products that represent the same physical item. For each group, determine a single, normalized "canonicalProductName" that best represents the product.
-Then list all the individual scraped product entries that belong to that group.
-
-Your response MUST be a JSON object with a single property 'matchedProductGroups' containing an array of these groups.`,
+Identify the groups and return a JSON object with 'matchedProductGroups'. Each group must have a standardized 'canonicalProductName'.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(

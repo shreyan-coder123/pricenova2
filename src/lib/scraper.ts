@@ -10,9 +10,8 @@ import { ScrapedProduct } from '@/ai/flows/ai-product-matching';
 export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
   const apiKey = process.env.SERPAPI_KEY || '4497efce288f226e7abd17121b9844a1b77453303c43ef8ae7643a690f469662';
   
-  // We use the Google Shopping engine for accurate e-commerce results.
-  // Using gl=in for India context (INR prices) as per original app theme.
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${apiKey}&hl=en&gl=in`;
+  // Increased num to 100 to get a wider range of platforms for comparison
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${apiKey}&hl=en&gl=in&num=100`;
 
   try {
     const response = await fetch(url, { 
@@ -36,7 +35,7 @@ export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
       title: item.title || 'Product Name Unavailable',
       price: item.extracted_price || 0,
       originalPrice: item.old_price ? parseFloat(item.old_price.replace(/[^0-9.]/g, '')) : undefined,
-      discountPercentage: undefined, // AI flows will infer this or it can be calculated
+      discountPercentage: item.extensions?.find((ext: string) => ext.includes('% off')) || undefined,
       imageUrl: item.thumbnail || 'https://picsum.photos/seed/placeholder/400/400',
       productUrl: item.link || '#',
       rating: item.rating,
