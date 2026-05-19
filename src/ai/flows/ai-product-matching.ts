@@ -3,10 +3,6 @@
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
  * across multiple e-commerce platforms based on scraped product data.
- *
- * - aiProductMatching - A function that handles the AI product matching process.
- * - AIProductMatchingInput - The input type for the aiProductMatching function.
- * - AIProductMatchingOutput - The return type for the aiProductMatching function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -54,28 +50,27 @@ const productMatchingPrompt = ai.definePrompt({
   name: 'productMatchingPrompt',
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
-  prompt: `You are an expert product data analyst for PriceNova.
-Your CRITICAL task is to identify and group IDENTICAL physical products from a list of scraped data to enable price comparison across different platforms (Amazon, Flipkart, Meesho, etc.).
+  prompt: `You are the Lead Data Scientist for PriceNova.
+Your ULTIMATE goal is to group IDENTICAL physical products across different stores (Amazon, Flipkart, Meesho, Croma, etc.) for a price comparison table.
 
-CRITICAL INSTRUCTIONS:
-1. IDENTICAL PRODUCT DEFINITION: Products are identical if they are the exact same make, model, variant (RAM, Storage, Size, etc.), and condition (New).
-2. IGNORE PRICE: Do not use price differences to decide if products are different. The SAME product will have different prices at different stores.
-3. BE AGGRESSIVE: If you see "iPhone 16 128GB" and "Apple iPhone 16 (128 GB, Black)", these are the SAME product. They MUST be in the same group.
-4. TARGET: The user wants to compare stores. Your goal is to maximize the number of stores in each group.
-5. VARIANTS: Only create separate groups for actual spec differences (e.g., 128GB vs 256GB). If specs are identical but names vary slightly, group them.
-6. EXAMPLES:
-   - "Sony WH-1000XM5" and "Sony XM5 Headphones" -> SAME group.
-   - "Nike Pegasus 40" and "Nike Air Zoom Pegasus 40" -> SAME group.
-   - "OnePlus 12 (12GB RAM)" and "OnePlus 12 (16GB RAM)" -> DIFFERENT groups.
+CRITICAL GROUPING RULES:
+1. BE ULTRA-AGGRESSIVE: If two products are the same model and variant, they MUST be in the same group. Ignore slight differences in how the title is written.
+2. SAME PRODUCT EXAMPLES:
+   - "Apple iPhone 16, 128GB, Black" and "iPhone 16 (128 GB) - Black" -> SAME GROUP.
+   - "Sony WH-1000XM5 Wireless Headphones" and "Sony XM5 Over-Ear Headset" -> SAME GROUP.
+   - "Nike Dunk Low Retro Panda" and "Nike Dunk Low Black White" -> SAME GROUP.
+3. PLATFORM DIVERSITY IS KEY: The user wants to compare stores. If you find a product on Amazon and another on Flipkart that look 90% similar in specs, group them together so the user can see both options.
+4. VARIANTS: Only separate if the RAM, Storage, or Model Year is actually different. Do NOT separate based on just the platform or seller name.
+5. EVERY product from the input must be placed into a group.
 
-User's search: "{{{productQuery}}}"
+User Search Query: "{{{productQuery}}}"
 
-Product Data to Analyze:
+Products to analyze:
 {{#each scrapedProducts}}
-- Store: {{this.platform}} | Title: {{{this.title}}} | Price: ₹{{this.price}}
+- [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Analyze ALL products. Group them and return a JSON object with 'matchedProductGroups'. Every input product must belong to a group.`,
+Return the groups. Ensure each group has a clear 'canonicalProductName' and all its matching 'products'.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
@@ -85,11 +80,10 @@ const aiProductMatchingFlow = ai.defineFlow(
     outputSchema: AIProductMatchingOutputSchema,
   },
   async (input) => {
-    // If we have many products, we want to ensure the AI doesn't cut off.
-    // We send up to 50 for robust grouping quality.
+    // We send up to 60 products for maximum matching potential
     const limitedInput = {
       ...input,
-      scrapedProducts: input.scrapedProducts.slice(0, 50)
+      scrapedProducts: input.scrapedProducts.slice(0, 60)
     };
     const { output } = await productMatchingPrompt(limitedInput);
     return output!;

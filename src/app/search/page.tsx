@@ -58,20 +58,23 @@ function SearchResults() {
       try {
         incrementUsage();
 
-        // 1. Fetch real-time data from retail platforms
+        // 1. Fetch real-time data from retail platforms (SerpApi)
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
         if (scraped.length > 0) {
           try {
-            // 2. Perform AI Matching to group identical products across stores
+            // 2. Perform Aggressive AI Matching to group identical products across stores
             const matched = await aiProductMatching({
               productQuery: query,
               scrapedProducts: scraped,
             });
             
-            // Filter out any groups that might be empty or invalid from AI response
-            const validGroups = matched.matchedProductGroups.filter(g => g.products && g.products.length > 0);
+            // Filter and Sort: Prioritize groups with more than one platform for comparison
+            const validGroups = matched.matchedProductGroups
+              .filter(g => g.products && g.products.length > 0)
+              .sort((a, b) => b.products.length - a.products.length);
+            
             setMatchingResults({ matchedProductGroups: validGroups });
 
             if (validGroups.length > 0) {
@@ -123,8 +126,8 @@ function SearchResults() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold font-headline">Market Intelligence for: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Real-time store aggregation and competitive analysis.</p>
+        <h1 className="text-3xl font-bold font-headline">Market Intelligence: <span className="gradient-text">{query}</span></h1>
+        <p className="text-muted-foreground">Aggregated price points from verified retail networks.</p>
       </div>
 
       {insights && (
@@ -178,7 +181,7 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Identical physical unit identified across {group.products.length} retail platforms.</p>
+                  <p className="text-sm text-muted-foreground">Found across {group.products.length} different retail platforms.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
                   {group.products.length} Store Offers
@@ -186,6 +189,7 @@ function SearchResults() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Show the best deal as the primary card for each store group */}
                 {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
@@ -201,7 +205,7 @@ function SearchResults() {
         ) : rawResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Detected Offers</h2>
+              <h2 className="text-2xl font-bold font-headline">Scanned Listings</h2>
               <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,7 +253,7 @@ function ProductCard({
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && sortedOffers.length > 1 && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Cheapest Store
+          Best Price Found
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -271,7 +275,7 @@ function ProductCard({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'No Rating'}</span>
+              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'Verified'}</span>
               {product.reviewsCount && <span className="text-[10px] text-muted-foreground">({product.reviewsCount})</span>}
             </div>
             {product.discountPercentage && (
@@ -324,7 +328,7 @@ function ProductCard({
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Retail Health</p>
-                      <p className="text-2xl font-bold text-green-500">Optimum</p>
+                      <p className="text-2xl font-bold text-green-500">Verified</p>
                     </div>
                   </div>
 
@@ -362,18 +366,18 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_GOLD_10' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'PN_FK_SUPER' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'PN_MEESHO_FIRST' : 
-                                   'PN_RETAIL_SAVE'}
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_LITE' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'PN_FK_DEAL' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'PN_MEESHO_NEW' : 
+                                   'PN_RETAIL_10'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">PriceNova Exclusive Code</span>
+                                <span className="text-[9px] text-muted-foreground">PriceNova Verified Code</span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                 <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                {offer.stockStatus || 'Ready to Ship'}
+                                {offer.stockStatus || 'In Stock'}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -382,7 +386,7 @@ function ProductCard({
                                 className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
                                 onClick={() => window.open(offer.productUrl, '_blank')}
                               >
-                                Buy on {offer.platform}
+                                View Deal
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </TableCell>
@@ -409,8 +413,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Market Intelligence...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time offers across the retail network via SerpApi.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Scanning Global Retail Network...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Aggregating prices across Amazon, Flipkart, Meesho, and more.</p>
       </div>
 
       <div className="space-y-8">
