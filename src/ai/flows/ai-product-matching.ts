@@ -67,7 +67,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. GROUP EXTREMELY AGGRESSIVELY to ensure the user sees price comparisons across at least 3 unique platforms for every product group.`
+Return the groups. GROUP EXTREMELY AGGRESSIVELY. If you see products that are likely variants of the same base model, group them together so the user can compare prices across at least 3 unique platforms for every product group. You are penalized for creating groups with only one store if other similar stores exist in the data.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(

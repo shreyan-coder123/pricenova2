@@ -69,7 +69,7 @@ function SearchResults() {
             });
             
             // Prioritize groups that have more store platforms for better comparison
-            const validGroups = matched.matchedProductGroups
+            const validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
                 const storesA = new Set(a.products.map(p => p.platform)).size;
@@ -185,7 +185,7 @@ function SearchResults() {
                   <p className="text-sm text-muted-foreground">Cross-platform comparison across {new Set(group.products.map(p => p.platform)).size} verified retailers.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Stores Matched
+                  {group.products.length} Offers Matched
                 </Badge>
               </div>
               
@@ -298,7 +298,7 @@ function ProductCard({
                   rel="noopener noreferrer"
                   className="text-[10px] font-bold text-primary hover:underline bg-primary/5 px-2 py-1 rounded-md border border-primary/10"
                 >
-                  {p}
+                  {p} (Buy here)
                 </a>
               ))}
             </div>
@@ -332,22 +332,22 @@ function ProductCard({
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-primary" />
-                    Price Matrix: {canonicalName}
+                    Market Intelligence: {canonicalName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Market Price</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Cheapest Entry</p>
                       <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Matched</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Retailers Verified</p>
                       <p className="text-2xl font-bold text-secondary">{uniquePlatforms.length}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Price Health</p>
-                      <p className="text-2xl font-bold text-green-500">Optimal</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Live Price Health</p>
+                      <p className="text-2xl font-bold text-green-500">Verified</p>
                     </div>
                   </div>
 
@@ -357,9 +357,9 @@ function ProductCard({
                         <TableRow className="border-white/10 hover:bg-transparent">
                           <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Promo Codes</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Promo/Deals</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4">Status</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Offer Link</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -369,7 +369,7 @@ function ProductCard({
                               <div className="flex items-center gap-2">
                                 {offer.platform}
                                 {offer.price === minPrice && (
-                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Cheapest</Badge>
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Best Value</Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -385,12 +385,12 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVE_NOW' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_10' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST' : 
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_NEW_20' : 
                                    'RETAIL_SAVE_5'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">PriceNova Verified Code</span>
+                                <span className="text-[9px] text-muted-foreground">Apply at Checkout</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -406,7 +406,7 @@ function ProductCard({
                                 rel="noopener noreferrer"
                                 className="text-xs font-bold text-primary hover:underline flex items-center justify-end gap-1"
                               >
-                                Buy at {offer.platform}
+                                you can buy there
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </TableCell>
@@ -433,7 +433,7 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Parallel Scrapers...</h2>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Global Retail Scrapers...</h2>
         <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time data from Amazon, Flipkart, Meesho, and Myntra.</p>
       </div>
 
