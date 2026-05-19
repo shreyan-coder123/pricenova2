@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
@@ -51,17 +50,18 @@ const productMatchingPrompt = ai.definePrompt({
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
   prompt: `You are the Lead Data Scientist for PriceNova.
-Your ULTIMATE goal is to group IDENTICAL physical products across different stores (Amazon, Flipkart, Meesho, Croma, etc.) for a price comparison table.
+Your ULTIMATE goal is to group IDENTICAL physical products across different stores (Amazon, Flipkart, Meesho, Croma, Ajio, Myntra, etc.) for a price comparison table.
 
 CRITICAL GROUPING RULES:
-1. BE ULTRA-AGGRESSIVE: If two products are the same model and variant, they MUST be in the same group. Ignore slight differences in how the title is written.
-2. SAME PRODUCT EXAMPLES:
-   - "Apple iPhone 16, 128GB, Black" and "iPhone 16 (128 GB) - Black" -> SAME GROUP.
-   - "Sony WH-1000XM5 Wireless Headphones" and "Sony XM5 Over-Ear Headset" -> SAME GROUP.
-   - "Nike Dunk Low Retro Panda" and "Nike Dunk Low Black White" -> SAME GROUP.
-3. PLATFORM DIVERSITY IS KEY: The user wants to compare stores. If you find a product on Amazon and another on Flipkart that look 90% similar in specs, group them together so the user can see both options.
-4. VARIANTS: Only separate if the RAM, Storage, or Model Year is actually different. Do NOT separate based on just the platform or seller name.
-5. EVERY product from the input must be placed into a group.
+1. BE ULTRA-AGGRESSIVE: If two products are the same model and variant (e.g., iPhone 16 128GB), they MUST be in the same group. 
+2. IGNORE TITLE NOISE: Stores often use different titles. If the brand and model match, they are the same.
+3. MANDATORY MULTI-STORE GOAL: The user wants to see at least 3 stores for comparison. Group as many variants together as logically possible to provide a broad market view.
+4. SAME PRODUCT EXAMPLES:
+   - "Apple iPhone 16, 128GB, Black" (Amazon)
+   - "iPhone 16 (128 GB) - Black" (Flipkart)
+   - "Apple iPhone 16 128GB Black - Sealed" (Meesho)
+   -> THESE MUST BE ONE GROUP.
+5. NO SMALL GROUPS: Avoid creating groups with only 1 product if there is ANY other product in the list that is even 80% similar in specs.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -70,7 +70,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. Ensure each group has a clear 'canonicalProductName' and all its matching 'products'.`,
+Return the groups. Ensure each group contains all matching products from every available platform.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
@@ -80,10 +80,10 @@ const aiProductMatchingFlow = ai.defineFlow(
     outputSchema: AIProductMatchingOutputSchema,
   },
   async (input) => {
-    // We send up to 60 products for maximum matching potential
+    // Processing up to 80 products for deeper matching potential
     const limitedInput = {
       ...input,
-      scrapedProducts: input.scrapedProducts.slice(0, 60)
+      scrapedProducts: input.scrapedProducts.slice(0, 80)
     };
     const { output } = await productMatchingPrompt(limitedInput);
     return output!;

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -27,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/table";
 
 export default function SearchPage() {
   return (
@@ -70,7 +69,7 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Filter and Sort: Prioritize groups with more than one platform for comparison
+            // Filter and Sort: Prioritize groups with most platforms for comparison
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => b.products.length - a.products.length);
@@ -127,7 +126,7 @@ function SearchResults() {
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold font-headline">Market Intelligence: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated price points from verified retail networks.</p>
+        <p className="text-muted-foreground">Aggregated real-time price points across Amazon, Flipkart, Meesho, and more.</p>
       </div>
 
       {insights && (
@@ -137,7 +136,7 @@ function SearchResults() {
               <div className="glass p-8 rounded-2xl max-w-sm space-y-4">
                 <AlertCircle className="w-12 h-12 text-secondary mx-auto" />
                 <h3 className="text-xl font-bold">Pro Intelligence Locked</h3>
-                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis, price trends, and automated deal scoring.</p>
+                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis and hidden deal codes across all stores.</p>
                 <Button onClick={() => router.push('/#pricing')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full">Upgrade Now</Button>
               </div>
             </div>
@@ -167,7 +166,7 @@ function SearchResults() {
               <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 h-full">
                 <TrendingDown className="w-8 h-8 text-primary mb-4" />
                 <h3 className="text-xl font-bold mb-2">Smart Score</h3>
-                <p className="text-sm text-muted-foreground">Our neural engine analyzes global retail velocity to find the optimal purchase window.</p>
+                <p className="text-sm text-muted-foreground">PriceNova analyzes retail velocity to find the cheapest purchase window across platforms.</p>
               </div>
             </div>
           </div>
@@ -177,11 +176,11 @@ function SearchResults() {
       <div className="space-y-16">
         {matchingResults && matchingResults.matchedProductGroups.length > 0 ? (
           matchingResults.matchedProductGroups.map((group, groupIdx) => (
-            <div key={groupIdx} className="space-y-8 p-1 rounded-3xl">
+            <div key={groupIdx} className="space-y-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Found across {group.products.length} different retail platforms.</p>
+                  <p className="text-sm text-muted-foreground">Compared across {group.products.length} major retail platforms.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
                   {group.products.length} Store Offers
@@ -190,7 +189,7 @@ function SearchResults() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {/* Show the best deal as the primary card for each store group */}
-                {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
+                {group.products.sort((a,b) => a.price - b.price).slice(0, 6).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
                     product={product} 
@@ -205,7 +204,7 @@ function SearchResults() {
         ) : rawResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Scanned Listings</h2>
+              <h2 className="text-2xl font-bold font-headline">Verified Scans</h2>
               <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -227,7 +226,7 @@ function SearchResults() {
             </div>
             <h2 className="text-2xl font-bold font-headline">No matching offers found</h2>
             <p className="text-muted-foreground max-w-sm mx-auto">The retail network returned no active listings for "{query}".</p>
-            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Try New Search</Button>
+            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">New Scan</Button>
           </div>
         )}
       </div>
@@ -246,14 +245,14 @@ function ProductCard({
   allOffers: any[], 
   canonicalName: string 
 }) {
-  const sortedOffers = allOffers.slice().sort((a, b) => a.price - b.price);
-  const minPrice = sortedOffers.length > 0 ? sortedOffers[0].price : 0;
+  const sortedOffers = [...allOffers].sort((a, b) => a.price - b.price);
+  const minPrice = sortedOffers[0]?.price || 0;
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && sortedOffers.length > 1 && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Price Found
+          Best Market Price
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -263,10 +262,10 @@ function ProductCard({
             alt={product.title} 
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Product+Image';
+              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=PriceNova+Verified';
             }}
           />
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10 max-w-[120px] truncate">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10">
             {product.platform}
           </div>
         </div>
@@ -275,7 +274,7 @@ function ProductCard({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'Verified'}</span>
+              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'Live'}</span>
               {product.reviewsCount && <span className="text-[10px] text-muted-foreground">({product.reviewsCount})</span>}
             </div>
             {product.discountPercentage && (
@@ -313,7 +312,7 @@ function ProductCard({
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-primary" />
-                    Market Comparison: {canonicalName}
+                    Market Intelligence: {canonicalName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
@@ -324,10 +323,10 @@ function ProductCard({
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Available Stores</p>
-                      <p className="text-2xl font-bold text-secondary">{allOffers.length}</p>
+                      <p className="text-2xl font-bold text-secondary">{sortedOffers.length}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Retail Health</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Health</p>
                       <p className="text-2xl font-bold text-green-500">Verified</p>
                     </div>
                   </div>
@@ -338,9 +337,9 @@ function ProductCard({
                         <TableRow className="border-white/10 hover:bg-transparent">
                           <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4">Current Price</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Promo Intelligence</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Fulfillment</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Promo Codes</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Status</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4 text-right">View Offer</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -349,7 +348,7 @@ function ProductCard({
                             <TableCell className="font-bold">
                               <div className="flex items-center gap-2">
                                 {offer.platform}
-                                {offer.price === minPrice && sortedOffers.length > 1 && (
+                                {offer.price === minPrice && (
                                   <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Cheapest</Badge>
                                 )}
                               </div>
@@ -366,12 +365,12 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_LITE' : 
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_GOLD' : 
                                    offer.platform.toLowerCase().includes('flipkart') ? 'PN_FK_DEAL' : 
                                    offer.platform.toLowerCase().includes('meesho') ? 'PN_MEESHO_NEW' : 
-                                   'PN_RETAIL_10'}
+                                   'PN_RETAIL_15'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">PriceNova Verified Code</span>
+                                <span className="text-[9px] text-muted-foreground">PriceNova Exclusive Code</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -386,7 +385,7 @@ function ProductCard({
                                 className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
                                 onClick={() => window.open(offer.productUrl, '_blank')}
                               >
-                                View Deal
+                                Buy Now
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </TableCell>
@@ -413,8 +412,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Scanning Global Retail Network...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Aggregating prices across Amazon, Flipkart, Meesho, and more.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Global Retailers...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Scanning Amazon, Flipkart, Meesho, and more for identical matches.</p>
       </div>
 
       <div className="space-y-8">
@@ -438,7 +437,7 @@ function UpgradeRequired() {
         </div>
         <h2 className="text-3xl font-bold font-headline">Intelligence Limit Reached</h2>
         <p className="text-muted-foreground">
-          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI insights.
+          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI grouping.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
