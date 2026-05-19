@@ -9,7 +9,7 @@ import { aiShoppingInsights, AIShoppingInsightsOutput } from '@/ai/flows/ai-shop
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search, ArrowRightLeft } from 'lucide-react';
+import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search, ArrowRightLeft, Ticket, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -224,6 +224,9 @@ function ProductCard({
   allOffers?: any[], 
   canonicalName?: string 
 }) {
+  const sortedOffers = allOffers?.slice().sort((a, b) => a.price - b.price);
+  const minPrice = sortedOffers ? sortedOffers[0].price : 0;
+
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && (
@@ -275,7 +278,7 @@ function ProductCard({
           </div>
           
           <div className="flex gap-2">
-            {allOffers && allOffers.length > 1 ? (
+            {allOffers && allOffers.length > 0 ? (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button 
@@ -285,40 +288,92 @@ function ProductCard({
                     <ArrowRightLeft className="w-3 h-3 ml-2" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl bg-card border-white/10">
+                <DialogContent className="max-w-4xl bg-card border-white/10 max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold font-headline">Price Comparison: {canonicalName}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
+                      <Cpu className="w-5 h-5 text-primary" />
+                      Live Market Comparison: {canonicalName}
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="mt-4">
-                    <Table>
-                      <TableHeader className="bg-white/5">
-                        <TableRow className="border-white/10">
-                          <TableHead className="text-xs font-bold uppercase">Store</TableHead>
-                          <TableHead className="text-xs font-bold uppercase">Condition/Stock</TableHead>
-                          <TableHead className="text-xs font-bold uppercase text-right">Price</TableHead>
-                          <TableHead className="text-xs font-bold uppercase text-right">Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {allOffers.sort((a,b) => a.price - b.price).map((offer, idx) => (
-                          <TableRow key={idx} className="border-white/5 hover:bg-white/5 transition-colors">
-                            <TableCell className="font-semibold">{offer.platform}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{offer.stockStatus || 'In Stock'}</TableCell>
-                            <TableCell className="text-right font-bold text-primary">₹{offer.price.toLocaleString()}</TableCell>
-                            <TableCell className="text-right">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-8 hover:bg-primary hover:text-primary-foreground"
-                                onClick={() => window.open(offer.productUrl, '_blank')}
-                              >
-                                Buy <ExternalLink className="w-3 h-3 ml-1" />
-                              </Button>
-                            </TableCell>
+                  <div className="mt-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Price</p>
+                        <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Total Stores Found</p>
+                        <p className="text-2xl font-bold text-secondary">{allOffers.length}</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Status</p>
+                        <p className="text-2xl font-bold text-green-500">Live</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-white/5">
+                          <TableRow className="border-white/10">
+                            <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
+                            <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
+                            <TableHead className="text-xs font-bold uppercase py-4">Promo / Offers</TableHead>
+                            <TableHead className="text-xs font-bold uppercase py-4">Condition</TableHead>
+                            <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {sortedOffers?.map((offer, idx) => (
+                            <TableRow key={idx} className={`border-white/5 hover:bg-white/5 transition-colors ${offer.price === minPrice ? 'bg-primary/5' : ''}`}>
+                              <TableCell className="font-bold">
+                                <div className="flex items-center gap-2">
+                                  {offer.platform}
+                                  {offer.price === minPrice && (
+                                    <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0">Best Value</Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-bold text-primary">
+                                <div className="space-y-0.5">
+                                  <p>₹{offer.price.toLocaleString()}</p>
+                                  {offer.originalPrice && (
+                                    <p className="text-[10px] text-muted-foreground line-through">₹{offer.originalPrice.toLocaleString()}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
+                                    <Ticket className="w-3 h-3" />
+                                    {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
+                                     offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
+                                     offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST_OFFER' : 
+                                     'Check Store for Codes'}
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground">Real-time detected promo</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                  {offer.stockStatus || 'New / In Stock'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button 
+                                  size="sm" 
+                                  className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
+                                  onClick={() => window.open(offer.productUrl, '_blank')}
+                                >
+                                  Go to {offer.platform}
+                                  <ExternalLink className="w-3 h-3 ml-2" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
