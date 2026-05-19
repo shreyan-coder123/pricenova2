@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
@@ -9,36 +8,36 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ScrapedProductSchema = z.object({
-  platform: z.string().describe('The e-commerce platform where the product was scraped from (e.g., "Amazon India", "Flipkart").'),
-  title: z.string().describe('The title of the product as listed on the e-commerce platform.'),
-  price: z.number().describe('The current selling price of the product.'),
-  originalPrice: z.number().optional().describe('The original price of the product before any discount, if available.'),
-  discountPercentage: z.string().optional().describe('The discount percentage, if any (e.g., "15%").'),
-  imageUrl: z.string().url().describe('The URL of the product image.'),
-  productUrl: z.string().url().describe('The direct URL to the product page on the e-commerce platform.'),
-  rating: z.number().optional().describe('The average customer rating for the product, if available.'),
-  reviewsCount: z.number().optional().describe('The number of customer reviews for the product, if available.'),
-  seller: z.string().optional().describe('The name of the seller or store.'),
-  deliveryDetails: z.string().optional().describe('Information regarding delivery, e.g., estimated delivery time.'),
-  stockStatus: z.string().optional().describe('The current stock status of the product (e.g., "In Stock", "Out of Stock").'),
+  platform: z.string().describe('The platform (e.g., "Amazon", "Flipkart", "Meesho").'),
+  title: z.string().describe('The title of the product.'),
+  price: z.number().describe('The current price.'),
+  originalPrice: z.number().optional().describe('The original price.'),
+  discountPercentage: z.string().optional().describe('The discount string.'),
+  imageUrl: z.string().url().describe('The image URL.'),
+  productUrl: z.string().url().describe('The direct URL to buy.'),
+  rating: z.number().optional().describe('Average rating.'),
+  reviewsCount: z.number().optional().describe('Number of reviews.'),
+  seller: z.string().optional().describe('Seller name.'),
+  deliveryDetails: z.string().optional().describe('Delivery info.'),
+  stockStatus: z.string().optional().describe('Stock status.'),
 });
 
 export type ScrapedProduct = z.infer<typeof ScrapedProductSchema>;
 
 const AIProductMatchingInputSchema = z.object({
-  productQuery: z.string().describe('The original search query entered by the user (e.g., "iPhone 16").'),
-  scrapedProducts: z.array(ScrapedProductSchema).describe('An array of product data scraped from various e-commerce websites.'),
+  productQuery: z.string().describe('The user search query.'),
+  scrapedProducts: z.array(ScrapedProductSchema).describe('Array of scraped data.'),
 });
 export type AIProductMatchingInput = z.infer<typeof AIProductMatchingInputSchema>;
 
 const MatchedProductGroupSchema = z.object({
-  canonicalProductName: z.string().describe('A normalized and standardized name for the identified product group.'),
-  products: z.array(ScrapedProductSchema).describe('An array of individual scraped product objects that belong to this identified product group.'),
-  reasoning: z.string().optional().describe('A brief explanation of why these products were grouped together, if helpful.'),
+  canonicalProductName: z.string().describe('Normalized name for the product.'),
+  products: z.array(ScrapedProductSchema).describe('Products in this group.'),
+  reasoning: z.string().optional().describe('Grouping logic.'),
 });
 
 const AIProductMatchingOutputSchema = z.object({
-  matchedProductGroups: z.array(MatchedProductGroupSchema).describe('An array of groups, where each group contains identical physical products identified across different e-commerce platforms.'),
+  matchedProductGroups: z.array(MatchedProductGroupSchema).describe('Consolidated product groups.'),
 });
 export type AIProductMatchingOutput = z.infer<typeof AIProductMatchingOutputSchema>;
 
@@ -50,16 +49,15 @@ const productMatchingPrompt = ai.definePrompt({
   name: 'productMatchingPrompt',
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
-  prompt: `You are the Lead Data Scientist for PriceNova. 
-Your ABSOLUTE MISSION is to consolidate IDENTICAL physical products across DIFFERENT platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, Nykaa, etc.) into a SINGLE group.
+  prompt: `You are the Lead Grouping Engine for PriceNova. 
+Your SOLE PURPOSE is to group identical physical products across Amazon, Flipkart, Meesho, and others into ONE group.
 
-CRITICAL GROUPING RULES:
-1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles on Amazon, Flipkart, and Meesho are often different for the SAME item. Ignore text like "Pack of 1", "Official Global Store", "Online Best Deal", or seller codes. 
-2. **CROSS-PLATFORM MANDATE**: If a product exists on Amazon and a similar one on Flipkart or Meesho, they MUST be in the same group. Do NOT create separate groups for different stores. 
-3. **MODEL IDENTIFICATION**: Prioritize model numbers, storage capacities (e.g., "128GB"), and colors. If the core hardware or product is identical, group them regardless of the platform title variation.
-4. **FORCE DIVERSITY**: The user wants to see at least 3 unique platforms (Amazon, Flipkart, Meesho, etc.) side-by-side for every group. 
-5. **IGNORE VARIANT NOISE**: Brands might include store names (e.g., "Samsung Store" vs "Samsung Mobile"). Treat them as the same brand.
-6. **PENALTY**: You are heavily penalized if you return a group with only 1 store listing when other similar store listings are available. FORCE them together.
+STRICT GROUPING RULES:
+1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles vary wildly. Ignore platform fluff like "Great Indian Festival", "Lowest Price", or seller codes. If they are the same physical model (e.g., iPhone 16), THEY MUST BE GROUPED.
+2. **PLATFORM DIVERSITY**: I want to see Amazon, Flipkart, and Meesho side-by-side. If you find a product on Amazon and a similar one on Flipkart, they are the SAME product. Group them.
+3. **MODEL OVER BRAND**: Prioritize storage (128GB, 256GB), color, and model numbers. 
+4. **NO SPLITTING**: It is better to have a slightly mismatched group than to show the same product in three separate cards. 
+5. **MINIMUM PLATFORMS**: Try to ensure every group contains listings from at least 3 different platforms if the data exists.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -68,7 +66,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. GROUP EXTREMELY AGGRESSIVELY. If you see products that are likely variants of the same base model, group them together so the user can compare prices across at least 3 unique platforms for every product group.`
+Group them aggressively. Show the user a true market comparison across at least 3 platforms per product.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -68,7 +67,6 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Prioritize groups that have more store platforms for better comparison
             const validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
@@ -105,7 +103,7 @@ function SearchResults() {
               setInsights(aiInsights);
             }
           } catch (aiError) {
-            console.warn('AI intelligence analysis deferred:', aiError);
+            console.warn('AI analysis deferred:', aiError);
           }
         }
       } catch (error) {
@@ -128,7 +126,7 @@ function SearchResults() {
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2 text-center md:text-left">
         <h1 className="text-3xl font-bold font-headline">Intelligence Report: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated real-time market data across the global retail network.</p>
+        <p className="text-muted-foreground">Aggregated real-time market data across Amazon, Flipkart, Meesho, and more.</p>
       </div>
 
       {insights && (
@@ -138,7 +136,7 @@ function SearchResults() {
               <div className="glass p-8 rounded-2xl max-w-sm space-y-4">
                 <AlertCircle className="w-12 h-12 text-secondary mx-auto" />
                 <h3 className="text-xl font-bold">Pro Intelligence Locked</h3>
-                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis and hidden deal codes across all stores.</p>
+                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis and multi-store grouping.</p>
                 <Button onClick={() => router.push('/#pricing')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full">Upgrade Now</Button>
               </div>
             </div>
@@ -168,7 +166,7 @@ function SearchResults() {
               <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 h-full">
                 <TrendingDown className="w-8 h-8 text-primary mb-4" />
                 <h3 className="text-xl font-bold mb-2">Savings Score</h3>
-                <p className="text-sm text-muted-foreground">We matched listings across multiple platforms to find the lowest entry price.</p>
+                <p className="text-sm text-muted-foreground">We grouped listings from multiple platforms to find the true lowest price.</p>
               </div>
             </div>
           </div>
@@ -182,10 +180,10 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Cross-platform comparison across {new Set(group.products.map(p => p.platform)).size} verified retailers.</p>
+                  <p className="text-sm text-muted-foreground">Matched across {new Set(group.products.map(p => p.platform)).size} unique platforms.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Offers Matched
+                  {group.products.length} Offers Grouped
                 </Badge>
               </div>
               
@@ -202,31 +200,13 @@ function SearchResults() {
               </div>
             </div>
           ))
-        ) : rawResults.length > 0 ? (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Raw Market Scans</h2>
-              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items</Badge>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rawResults.sort((a,b) => a.price - b.price).map((product, pIdx) => (
-                <ProductCard 
-                  key={pIdx} 
-                  product={product} 
-                  isBestDeal={false} 
-                  allOffers={[product]}
-                  canonicalName={product.title}
-                />
-              ))}
-            </div>
-          </div>
         ) : (
           <div className="text-center py-24 space-y-4">
             <div className="bg-white/5 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold font-headline">No matching offers found</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">The retail network returned no active listings for "{query}".</p>
+            <p className="text-muted-foreground max-w-sm mx-auto">Try a broader search query to help our AI find cross-platform matches.</p>
             <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">New Scan</Button>
           </div>
         )}
@@ -254,7 +234,7 @@ function ProductCard({
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && sortedOffers.length > 1 && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Price Found
+          Best Price Across Market
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -290,26 +270,23 @@ function ProductCard({
           <div className="space-y-2">
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Available at:</p>
             <div className="flex flex-wrap gap-2">
-              {uniquePlatforms.map((p, idx) => (
-                <div key={idx} className="flex flex-col gap-1">
-                   <a 
-                    href={sortedOffers.find(o => o.platform === p)?.productUrl} 
+              {uniquePlatforms.map((p, idx) => {
+                const offer = sortedOffers.find(o => o.platform === p);
+                return (
+                  <a 
+                    key={idx}
+                    href={offer?.productUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-[10px] font-bold text-primary hover:underline bg-primary/5 px-2 py-1 rounded-md border border-primary/10 flex items-center gap-1"
                   >
-                    {p} - you can buy there
+                    you can buy there ({p})
                     <ExternalLink className="w-2 h-2" />
                   </a>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-
-          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <Package className="w-3 h-3" />
-            {product.deliveryDetails || 'Real-time stock verified'}
-          </p>
         </div>
 
         <div className="pt-4 border-t border-white/5 flex items-end justify-between">
@@ -326,7 +303,7 @@ function ProductCard({
                 <Button 
                   className="rounded-lg h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
                 >
-                  Compare
+                  Compare All
                   <ArrowRightLeft className="w-3 h-3 ml-2" />
                 </Button>
               </DialogTrigger>
@@ -334,21 +311,21 @@ function ProductCard({
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-primary" />
-                    Market Intelligence: {canonicalName}
+                    Market Comparison: {canonicalName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Cheapest Entry</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Market Price</p>
                       <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Retailers Verified</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Matched</p>
                       <p className="text-2xl font-bold text-secondary">{uniquePlatforms.length}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Live Price Health</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Live Health</p>
                       <p className="text-2xl font-bold text-green-500">Verified</p>
                     </div>
                   </div>
@@ -358,10 +335,10 @@ function ProductCard({
                       <TableHeader className="bg-white/5">
                         <TableRow className="border-white/10 hover:bg-transparent">
                           <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Promo/Deals</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Status</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Current Price</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Verified Coupon</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Stock</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Direct Link</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -371,7 +348,7 @@ function ProductCard({
                               <div className="flex items-center gap-2">
                                 {offer.platform}
                                 {offer.price === minPrice && (
-                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Best Value</Badge>
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Best Deal</Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -387,12 +364,12 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_NEW_20' : 
-                                   'RETAIL_SAVE_5'}
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZN_PRICENOVA' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_PN_SAVE' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_X_PN' : 
+                                   'PN_DEAL_10'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">Apply at Checkout</span>
+                                <span className="text-[9px] text-muted-foreground">Auto-apply available</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -435,8 +412,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Global Retail Scrapers...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time data from Amazon, Flipkart, Meesho, and Myntra.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Scanning Global Inventory...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Matching listings across Amazon, Flipkart, Meesho, and Myntra.</p>
       </div>
 
       <div className="space-y-8">
@@ -458,13 +435,13 @@ function UpgradeRequired() {
         <div className="p-4 bg-secondary/20 w-16 h-16 rounded-2xl mx-auto">
           <AlertCircle className="w-8 h-8 text-secondary" />
         </div>
-        <h2 className="text-3xl font-bold font-headline">Intelligence Limit Reached</h2>
+        <h2 className="text-3xl font-bold font-headline">Scan Limit Reached</h2>
         <p className="text-muted-foreground">
-          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI grouping.
+          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited market grouping and deep insights.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
-            Upgrade for ₹500
+            Unlock Unlimited for ₹500
           </Button>
           <Button onClick={() => window.location.href = '/'} variant="ghost" className="w-full h-12 rounded-xl">
             Go Home
