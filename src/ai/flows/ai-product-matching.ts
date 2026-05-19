@@ -54,11 +54,12 @@ const productMatchingPrompt = ai.definePrompt({
 Your ABSOLUTE MISSION is to consolidate IDENTICAL physical products across DIFFERENT platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, Nykaa, etc.) into a SINGLE group.
 
 CRITICAL GROUPING RULES:
-1. **ULTRA-FUZZY MATCHING**: Titles on Amazon, Flipkart, and Meesho are often different for the SAME item. Ignore text like "Pack of 1", "Official Global Store", "Online Best Deal", or seller codes. 
+1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles on Amazon, Flipkart, and Meesho are often different for the SAME item. Ignore text like "Pack of 1", "Official Global Store", "Online Best Deal", or seller codes. 
 2. **CROSS-PLATFORM MANDATE**: If a product exists on Amazon and a similar one on Flipkart or Meesho, they MUST be in the same group. Do NOT create separate groups for different stores. 
 3. **MODEL IDENTIFICATION**: Prioritize model numbers, storage capacities (e.g., "128GB"), and colors. If the core hardware or product is identical, group them regardless of the platform title variation.
 4. **FORCE DIVERSITY**: The user wants to see at least 3 unique platforms (Amazon, Flipkart, Meesho, etc.) side-by-side for every group. 
 5. **IGNORE VARIANT NOISE**: Brands might include store names (e.g., "Samsung Store" vs "Samsung Mobile"). Treat them as the same brand.
+6. **PENALTY**: You are heavily penalized if you return a group with only 1 store listing when other similar store listings are available. FORCE them together.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -67,7 +68,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. GROUP EXTREMELY AGGRESSIVELY. If you see products that are likely variants of the same base model, group them together so the user can compare prices across at least 3 unique platforms for every product group. You are penalized for creating groups with only one store if other similar stores exist in the data.`
+Return the groups. GROUP EXTREMELY AGGRESSIVELY. If you see products that are likely variants of the same base model, group them together so the user can compare prices across at least 3 unique platforms for every product group.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(

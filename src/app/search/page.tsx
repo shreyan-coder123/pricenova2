@@ -291,15 +291,17 @@ function ProductCard({
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Available at:</p>
             <div className="flex flex-wrap gap-2">
               {uniquePlatforms.map((p, idx) => (
-                <a 
-                  key={idx} 
-                  href={sortedOffers.find(o => o.platform === p)?.productUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[10px] font-bold text-primary hover:underline bg-primary/5 px-2 py-1 rounded-md border border-primary/10"
-                >
-                  {p} (Buy here)
-                </a>
+                <div key={idx} className="flex flex-col gap-1">
+                   <a 
+                    href={sortedOffers.find(o => o.platform === p)?.productUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-bold text-primary hover:underline bg-primary/5 px-2 py-1 rounded-md border border-primary/10 flex items-center gap-1"
+                  >
+                    {p} - you can buy there
+                    <ExternalLink className="w-2 h-2" />
+                  </a>
+                </div>
               ))}
             </div>
           </div>

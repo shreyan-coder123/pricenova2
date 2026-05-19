@@ -18,7 +18,7 @@ export function PricingSection() {
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_simulation';
+    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SrFaWFczaTkzqh';
 
     if (typeof window.Razorpay === 'undefined') {
       toast({
@@ -26,6 +26,7 @@ export function PricingSection() {
         description: "Redirecting to encrypted payment gateway.",
       });
       
+      // Fallback if Razorpay script fails to load for any reason
       setTimeout(() => {
         setProStatus('SIMULATED_TOKEN_' + Date.now());
         window.dispatchEvent(new Event('storage'));
