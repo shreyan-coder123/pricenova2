@@ -194,7 +194,13 @@ function SearchResults() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {rawResults.sort((a,b) => a.price - b.price).map((product, pIdx) => (
-                <ProductCard key={pIdx} product={product} isBestDeal={false} />
+                <ProductCard 
+                  key={pIdx} 
+                  product={product} 
+                  isBestDeal={false} 
+                  allOffers={[product]}
+                  canonicalName={product.title}
+                />
               ))}
             </div>
           </div>
@@ -221,11 +227,11 @@ function ProductCard({
 }: { 
   product: any, 
   isBestDeal: boolean, 
-  allOffers?: any[], 
-  canonicalName?: string 
+  allOffers: any[], 
+  canonicalName: string 
 }) {
-  const sortedOffers = allOffers?.slice().sort((a, b) => a.price - b.price);
-  const minPrice = sortedOffers ? sortedOffers[0].price : 0;
+  const sortedOffers = allOffers.slice().sort((a, b) => a.price - b.price);
+  const minPrice = sortedOffers.length > 0 ? sortedOffers[0].price : 0;
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
@@ -278,114 +284,104 @@ function ProductCard({
           </div>
           
           <div className="flex gap-2">
-            {allOffers && allOffers.length > 0 ? (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="rounded-lg h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
-                  >
-                    Compare
-                    <ArrowRightLeft className="w-3 h-3 ml-2" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl bg-card border-white/10 max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
-                      <Cpu className="w-5 h-5 text-primary" />
-                      Live Market Comparison: {canonicalName}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Price</p>
-                        <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
-                      </div>
-                      <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Total Stores Found</p>
-                        <p className="text-2xl font-bold text-secondary">{allOffers.length}</p>
-                      </div>
-                      <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Status</p>
-                        <p className="text-2xl font-bold text-green-500">Live</p>
-                      </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  className="rounded-lg h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
+                >
+                  Compare
+                  <ArrowRightLeft className="w-3 h-3 ml-2" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl bg-card border-white/10 max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
+                    <Cpu className="w-5 h-5 text-primary" />
+                    Live Market Comparison: {canonicalName}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="mt-6 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Price</p>
+                      <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
-
-                    <div className="rounded-2xl border border-white/10 overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-white/5">
-                          <TableRow className="border-white/10">
-                            <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
-                            <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
-                            <TableHead className="text-xs font-bold uppercase py-4">Promo / Offers</TableHead>
-                            <TableHead className="text-xs font-bold uppercase py-4">Condition</TableHead>
-                            <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {sortedOffers?.map((offer, idx) => (
-                            <TableRow key={idx} className={`border-white/5 hover:bg-white/5 transition-colors ${offer.price === minPrice ? 'bg-primary/5' : ''}`}>
-                              <TableCell className="font-bold">
-                                <div className="flex items-center gap-2">
-                                  {offer.platform}
-                                  {offer.price === minPrice && (
-                                    <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0">Best Value</Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-bold text-primary">
-                                <div className="space-y-0.5">
-                                  <p>₹{offer.price.toLocaleString()}</p>
-                                  {offer.originalPrice && (
-                                    <p className="text-[10px] text-muted-foreground line-through">₹{offer.originalPrice.toLocaleString()}</p>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
-                                    <Ticket className="w-3 h-3" />
-                                    {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
-                                     offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
-                                     offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST_OFFER' : 
-                                     'Check Store for Codes'}
-                                  </div>
-                                  <span className="text-[9px] text-muted-foreground">Real-time detected promo</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                  <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                  {offer.stockStatus || 'New / In Stock'}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button 
-                                  size="sm" 
-                                  className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
-                                  onClick={() => window.open(offer.productUrl, '_blank')}
-                                >
-                                  Go to {offer.platform}
-                                  <ExternalLink className="w-3 h-3 ml-2" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Total Stores Found</p>
+                      <p className="text-2xl font-bold text-secondary">{allOffers.length}</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Status</p>
+                      <p className="text-2xl font-bold text-green-500">Live</p>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            ) : (
-              <Button 
-                onClick={() => window.open(product.productUrl, '_blank')}
-                className="rounded-lg h-10 px-4 bg-white/10 hover:bg-primary hover:text-primary-foreground group-hover:neon-glow"
-              >
-                Compare
-                <ArrowRightLeft className="w-3 h-3 ml-2" />
-              </Button>
-            )}
+
+                  <div className="rounded-2xl border border-white/10 overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-white/5">
+                        <TableRow className="border-white/10 hover:bg-transparent">
+                          <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Promo / Offers</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Condition</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedOffers.map((offer, idx) => (
+                          <TableRow key={idx} className={`border-white/5 hover:bg-white/5 transition-colors ${offer.price === minPrice ? 'bg-primary/5' : ''}`}>
+                            <TableCell className="font-bold">
+                              <div className="flex items-center gap-2">
+                                {offer.platform}
+                                {offer.price === minPrice && sortedOffers.length > 1 && (
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0">Best Value</Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-bold text-primary">
+                              <div className="space-y-0.5">
+                                <p>₹{offer.price.toLocaleString()}</p>
+                                {offer.originalPrice && (
+                                  <p className="text-[10px] text-muted-foreground line-through">₹{offer.originalPrice.toLocaleString()}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
+                                  <Ticket className="w-3 h-3" />
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST_OFFER' : 
+                                   'Check Store for Codes'}
+                                </div>
+                                <span className="text-[9px] text-muted-foreground">Real-time detected promo</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                {offer.stockStatus || 'New / In Stock'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                size="sm" 
+                                className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
+                                onClick={() => window.open(offer.productUrl, '_blank')}
+                              >
+                                Go to {offer.platform}
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </CardContent>
