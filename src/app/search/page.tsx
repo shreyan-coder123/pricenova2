@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -15,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <Suspense fallback={<SearchLoading />}>
         <SearchResults />
@@ -43,49 +44,51 @@ function SearchResults() {
         // Increment usage count locally
         incrementUsage();
 
-        // 1. Parallel Scraping
+        // 1. Fetch Real Data via SerpApi
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
-        // 2. AI Product Matching (Attempt)
-        try {
-          const matched = await aiProductMatching({
-            productQuery: query,
-            scrapedProducts: scraped,
-          });
-          setMatchingResults(matched);
-
-          // 3. AI Shopping Insights (Only if some products matched)
-          if (matched.matchedProductGroups.length > 0) {
-            const insightInput = matched.matchedProductGroups.flatMap(group => 
-              group.products.map(p => ({
-                store: p.platform,
-                productTitle: p.title,
-                currentPrice: p.price,
-                originalPrice: p.originalPrice,
-                discountPercentage: p.discountPercentage ? parseInt(p.discountPercentage) : undefined,
-                productImage: p.imageUrl,
-                productRating: p.rating,
-                reviewsCount: p.reviewsCount,
-                sellerName: p.seller,
-                deliveryInformation: p.deliveryDetails,
-                stockStatus: p.stockStatus,
-                productUrl: p.productUrl,
-                normalizedProductId: group.canonicalProductName
-              }))
-            );
-
-            const aiInsights = await aiShoppingInsights({
-              productData: insightInput,
-              searchQuery: query
+        // 2. AI Product Matching (Attempt to group identical products)
+        if (scraped.length > 0) {
+          try {
+            const matched = await aiProductMatching({
+              productQuery: query,
+              scrapedProducts: scraped,
             });
-            setInsights(aiInsights);
+            setMatchingResults(matched);
+
+            // 3. AI Shopping Insights
+            if (matched.matchedProductGroups.length > 0) {
+              const insightInput = matched.matchedProductGroups.flatMap(group => 
+                group.products.map(p => ({
+                  store: p.platform,
+                  productTitle: p.title,
+                  currentPrice: p.price,
+                  originalPrice: p.originalPrice,
+                  discountPercentage: p.discountPercentage ? parseInt(p.discountPercentage) : undefined,
+                  productImage: p.imageUrl,
+                  productRating: p.rating,
+                  reviewsCount: p.reviewsCount,
+                  sellerName: p.seller,
+                  deliveryInformation: p.deliveryDetails,
+                  stockStatus: p.stockStatus,
+                  productUrl: p.productUrl,
+                  normalizedProductId: group.canonicalProductName
+                }))
+              );
+
+              const aiInsights = await aiShoppingInsights({
+                productData: insightInput,
+                searchQuery: query
+              });
+              setInsights(aiInsights);
+            }
+          } catch (aiError) {
+            console.warn('AI processing failed, showing raw results:', aiError);
           }
-        } catch (aiError) {
-          console.warn('AI matching failed, showing raw results:', aiError);
         }
       } catch (error) {
-        console.error('Search failed:', error);
+        console.error('Search flow failed:', error);
       } finally {
         setLoading(false);
       }
@@ -103,19 +106,19 @@ function SearchResults() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold font-headline">Scan Results for: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated from 7 e-commerce engines in real-time.</p>
+        <h1 className="text-3xl font-bold font-headline">Intelligence Scan for: <span className="gradient-text">{query}</span></h1>
+        <p className="text-muted-foreground">Aggregated real-time offers across the global retail network.</p>
       </div>
 
-      {/* AI Insights Section (PRO Only or limited view) */}
+      {/* AI Insights Section */}
       {insights && (
         <div className={`relative p-8 rounded-3xl bg-secondary/5 border border-secondary/20 space-y-6 ${!isProUser ? 'blur-sm select-none pointer-events-none' : ''}`}>
           {!isProUser && (
             <div className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
               <div className="glass p-8 rounded-2xl max-w-sm space-y-4">
                 <AlertCircle className="w-12 h-12 text-secondary mx-auto" />
-                <h3 className="text-xl font-bold">Pro Feature Locked</h3>
-                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis, price trends, and best-value recommendations.</p>
+                <h3 className="text-xl font-bold">Pro Intelligence Locked</h3>
+                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis, price trends, and automated deal scoring.</p>
                 <Button onClick={() => router.push('/#pricing')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full">Upgrade Now</Button>
               </div>
             </div>
@@ -124,12 +127,12 @@ function SearchResults() {
             <div className="p-2 rounded-lg bg-secondary/20">
               <Info className="w-5 h-5 text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">PriceNova Intelligence</h2>
+            <h2 className="text-2xl font-bold font-headline">PriceNova Insights</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Overall Analysis</h3>
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Market Summary</h3>
                 <p className="text-lg leading-relaxed">{insights.overallSummary}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -144,22 +147,22 @@ function SearchResults() {
             <div className="space-y-4">
               <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 h-full">
                 <TrendingDown className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-xl font-bold mb-2">Deal Prediction</h3>
-                <p className="text-sm text-muted-foreground">Our AI predicts prices are currently at a 30-day low. High probability of price increase within 48 hours.</p>
+                <h3 className="text-xl font-bold mb-2">AI Smart Score</h3>
+                <p className="text-sm text-muted-foreground">Our neural engine analyzes price history and stock velocity to determine the optimal purchase window.</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Comparison Grid */}
+      {/* Results Grid */}
       <div className="space-y-12">
-        {matchingResults ? (
+        {matchingResults && matchingResults.matchedProductGroups.length > 0 ? (
           matchingResults.matchedProductGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-6">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                <Badge variant="outline" className="border-primary/30 text-primary">{group.products.length} offers</Badge>
+                <Badge variant="outline" className="border-primary/30 text-primary">{group.products.length} Stores Found</Badge>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -172,8 +175,8 @@ function SearchResults() {
         ) : rawResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Discovered Offers</h2>
-              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} found</Badge>
+              <h2 className="text-2xl font-bold font-headline">Scanned Offers</h2>
+              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items found</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {rawResults.sort((a,b) => a.price - b.price).map((product, pIdx) => (
@@ -186,9 +189,9 @@ function SearchResults() {
             <div className="bg-white/5 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">No offers found</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">We couldn't find any products matching "{query}" across our network of stores. Try adjusting your search query.</p>
-            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Try Again</Button>
+            <h2 className="text-2xl font-bold font-headline">No matching offers</h2>
+            <p className="text-muted-foreground max-w-sm mx-auto">Our scrapers couldn't find active deals for "{query}". Try broadening your search or checking for typos.</p>
+            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Start New Scan</Button>
           </div>
         )}
       </div>
@@ -201,7 +204,7 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Price Found
+          Best Market Price
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -210,8 +213,11 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
             src={product.imageUrl} 
             alt={product.title} 
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Product+Image';
+            }}
           />
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10 max-w-[120px] truncate">
             {product.platform}
           </div>
         </div>
@@ -220,25 +226,25 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{product.rating?.toFixed(1) || '0.0'}</span>
-              <span className="text-[10px] text-muted-foreground">({product.reviewsCount || 0})</span>
+              <span className="text-xs font-bold">{product.rating?.toFixed(1) || 'No Rating'}</span>
+              {product.reviewsCount && <span className="text-[10px] text-muted-foreground">({product.reviewsCount})</span>}
             </div>
             {product.discountPercentage && (
               <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
-                {product.discountPercentage} OFF
+                {product.discountPercentage}
               </Badge>
             )}
           </div>
-          <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{product.title}</h3>
+          <h3 className="text-sm font-semibold line-clamp-2 leading-tight h-10">{product.title}</h3>
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             <Package className="w-3 h-3" />
-            {product.deliveryDetails || 'Fast Delivery'}
+            {product.deliveryDetails || 'Check store for delivery'}
           </p>
         </div>
 
         <div className="pt-4 border-t border-white/5 flex items-end justify-between">
           <div>
-            <div className="text-xs text-muted-foreground line-through">
+            <div className="text-xs text-muted-foreground line-through h-4">
               {product.originalPrice ? `₹${product.originalPrice.toLocaleString()}` : ''}
             </div>
             <div className="text-2xl font-bold tracking-tight">₹{product.price.toLocaleString()}</div>
@@ -247,7 +253,7 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
             onClick={() => window.open(product.productUrl, '_blank')}
             className="rounded-lg h-10 px-4 bg-white/10 hover:bg-primary hover:text-primary-foreground group-hover:neon-glow"
           >
-            Go to Store
+            Visit
             <ExternalLink className="w-3 h-3 ml-2" />
           </Button>
         </div>
@@ -264,8 +270,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Initializing Parallel Scrapers...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching live data from Amazon, Flipkart, Myntra, and more.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Live Market Data...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time offers across the global retail network via SerpApi.</p>
       </div>
 
       <div className="space-y-8">
@@ -287,16 +293,16 @@ function UpgradeRequired() {
         <div className="p-4 bg-secondary/20 w-16 h-16 rounded-2xl mx-auto">
           <AlertCircle className="w-8 h-8 text-secondary" />
         </div>
-        <h2 className="text-3xl font-bold font-headline">Search Limit Reached</h2>
+        <h2 className="text-3xl font-bold font-headline">Search Capacity Reached</h2>
         <p className="text-muted-foreground">
-          You've used all 10 free searches. Upgrade to PriceNova PRO for unlimited real-time comparisons and AI-powered shopping insights.
+          Free intelligence scans are limited to 10 per cycle. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI insights.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
             Upgrade for ₹500
           </Button>
           <Button onClick={() => window.location.href = '/'} variant="ghost" className="w-full h-12 rounded-xl">
-            Return Home
+            Go Home
           </Button>
         </div>
       </div>
