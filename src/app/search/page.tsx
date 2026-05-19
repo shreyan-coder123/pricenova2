@@ -67,14 +67,13 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Filter out groups with only 1 product if better groups exist, 
-            // and sort groups that have the most variety of stores
+            // Prioritize groups that have the most variety of stores (e.g. Amazon + Flipkart + Meesho)
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
                 const storesA = new Set(a.products.map(p => p.platform)).size;
                 const storesB = new Set(b.products.map(p => p.platform)).size;
-                return storesB - storesA; // Prioritize groups with more platforms
+                return storesB - storesA;
               });
             
             setMatchingResults({ matchedProductGroups: validGroups });
