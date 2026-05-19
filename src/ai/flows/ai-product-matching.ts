@@ -55,13 +55,13 @@ Your ULTIMATE goal is to group IDENTICAL physical products across different stor
 CRITICAL GROUPING RULES:
 1. BE ULTRA-AGGRESSIVE: If two products are the same model and variant (e.g., iPhone 16 128GB), they MUST be in the same group. 
 2. IGNORE TITLE NOISE: Stores often use different titles. If the brand and model match, they are the same.
-3. MANDATORY MULTI-STORE GOAL: The user wants to see at least 3 stores for comparison. Group as many variants together as logically possible to provide a broad market view.
+3. MANDATORY MULTI-STORE GOAL: The user wants to see comparison across multiple platforms. Group as many variants together as logically possible to provide a broad market view.
 4. SAME PRODUCT EXAMPLES:
    - "Apple iPhone 16, 128GB, Black" (Amazon)
    - "iPhone 16 (128 GB) - Black" (Flipkart)
    - "Apple iPhone 16 128GB Black - Sealed" (Meesho)
    -> THESE MUST BE ONE GROUP.
-5. NO SMALL GROUPS: Avoid creating groups with only 1 product if there is ANY other product in the list that is even 80% similar in specs.
+5. AT LEAST 3 PLATFORMS: Actively look for matching items across different platforms. If there's an Amazon link and a Flipkart link for the same product, they MUST be grouped together.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -70,7 +70,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. Ensure each group contains all matching products from every available platform.`,
+Return the groups. Ensure each group contains all matching products from every available platform. Aim for groups with 3+ platforms whenever possible.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
@@ -80,12 +80,7 @@ const aiProductMatchingFlow = ai.defineFlow(
     outputSchema: AIProductMatchingOutputSchema,
   },
   async (input) => {
-    // Processing up to 80 products for deeper matching potential
-    const limitedInput = {
-      ...input,
-      scrapedProducts: input.scrapedProducts.slice(0, 80)
-    };
-    const { output } = await productMatchingPrompt(limitedInput);
+    const { output } = await productMatchingPrompt(input);
     return output!;
   }
 );

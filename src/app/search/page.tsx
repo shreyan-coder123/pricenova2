@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/table";
+} from "@/components/ui/table";
 
 export default function SearchPage() {
   return (
@@ -57,19 +57,16 @@ function SearchResults() {
       try {
         incrementUsage();
 
-        // 1. Fetch real-time data from retail platforms (SerpApi)
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
         if (scraped.length > 0) {
           try {
-            // 2. Perform Aggressive AI Matching to group identical products across stores
             const matched = await aiProductMatching({
               productQuery: query,
               scrapedProducts: scraped,
             });
             
-            // Filter and Sort: Prioritize groups with most platforms for comparison
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => b.products.length - a.products.length);
@@ -77,7 +74,6 @@ function SearchResults() {
             setMatchingResults({ matchedProductGroups: validGroups });
 
             if (validGroups.length > 0) {
-              // 3. Generate AI insights for the grouped data
               const insightInput = validGroups.flatMap(group => 
                 group.products.map(p => ({
                   store: p.platform,
@@ -188,7 +184,6 @@ function SearchResults() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {/* Show the best deal as the primary card for each store group */}
                 {group.products.sort((a,b) => a.price - b.price).slice(0, 6).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
