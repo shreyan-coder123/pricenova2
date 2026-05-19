@@ -78,9 +78,8 @@ Product URL: {{this.productUrl}}
 
 Based on the above data, identify groups of products that represent the same physical item. For each group, determine a single, normalized "canonicalProductName" that best represents the product.
 Then list all the individual scraped product entries that belong to that group.
-Provide a brief reasoning for grouping if helpful.
 
-Output the result as a JSON array of matched product groups, where each group has a 'canonicalProductName' and an array of 'products' (the original scraped product objects).`,
+Your response MUST be a JSON object with a single property 'matchedProductGroups' containing an array of these groups.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(

@@ -4,12 +4,12 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { scrapeRealTime } from '@/lib/scraper';
-import { aiProductMatching, AIProductMatchingOutput } from '@/ai/flows/ai-product-matching';
+import { aiProductMatching, AIProductMatchingOutput, ScrapedProduct } from '@/ai/flows/ai-product-matching';
 import { aiShoppingInsights, AIShoppingInsightsOutput } from '@/ai/flows/ai-shopping-insights';
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu } from 'lucide-react';
+import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -28,6 +28,7 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [loading, setLoading] = useState(true);
+  const [rawResults, setRawResults] = useState<ScrapedProduct[]>([]);
   const [matchingResults, setMatchingResults] = useState<AIProductMatchingOutput | null>(null);
   const [insights, setInsights] = useState<AIShoppingInsightsOutput | null>(null);
   const { remaining, isProUser, incrementUsage } = useSearchUsage();
@@ -43,41 +44,45 @@ function SearchResults() {
         incrementUsage();
 
         // 1. Parallel Scraping
-        const rawResults = await scrapeRealTime(query);
+        const scraped = await scrapeRealTime(query);
+        setRawResults(scraped);
 
-        // 2. AI Product Matching
-        const matched = await aiProductMatching({
-          productQuery: query,
-          scrapedProducts: rawResults,
-        });
-        setMatchingResults(matched);
-
-        // 3. AI Shopping Insights (Only if some products matched)
-        if (matched.matchedProductGroups.length > 0) {
-          // Map to the input format for insights flow
-          const insightInput = matched.matchedProductGroups.flatMap(group => 
-            group.products.map(p => ({
-              store: p.platform,
-              productTitle: p.title,
-              currentPrice: p.price,
-              originalPrice: p.originalPrice,
-              discountPercentage: p.discountPercentage ? parseInt(p.discountPercentage) : undefined,
-              productImage: p.imageUrl,
-              productRating: p.rating,
-              reviewsCount: p.reviewsCount,
-              sellerName: p.seller,
-              deliveryInformation: p.deliveryDetails,
-              stockStatus: p.stockStatus,
-              productUrl: p.productUrl,
-              normalizedProductId: group.canonicalProductName
-            }))
-          );
-
-          const aiInsights = await aiShoppingInsights({
-            productData: insightInput,
-            searchQuery: query
+        // 2. AI Product Matching (Attempt)
+        try {
+          const matched = await aiProductMatching({
+            productQuery: query,
+            scrapedProducts: scraped,
           });
-          setInsights(aiInsights);
+          setMatchingResults(matched);
+
+          // 3. AI Shopping Insights (Only if some products matched)
+          if (matched.matchedProductGroups.length > 0) {
+            const insightInput = matched.matchedProductGroups.flatMap(group => 
+              group.products.map(p => ({
+                store: p.platform,
+                productTitle: p.title,
+                currentPrice: p.price,
+                originalPrice: p.originalPrice,
+                discountPercentage: p.discountPercentage ? parseInt(p.discountPercentage) : undefined,
+                productImage: p.imageUrl,
+                productRating: p.rating,
+                reviewsCount: p.reviewsCount,
+                sellerName: p.seller,
+                deliveryInformation: p.deliveryDetails,
+                stockStatus: p.stockStatus,
+                productUrl: p.productUrl,
+                normalizedProductId: group.canonicalProductName
+              }))
+            );
+
+            const aiInsights = await aiShoppingInsights({
+              productData: insightInput,
+              searchQuery: query
+            });
+            setInsights(aiInsights);
+          }
+        } catch (aiError) {
+          console.warn('AI matching failed, showing raw results:', aiError);
         }
       } catch (error) {
         console.error('Search failed:', error);
@@ -149,20 +154,43 @@ function SearchResults() {
 
       {/* Comparison Grid */}
       <div className="space-y-12">
-        {matchingResults?.matchedProductGroups.map((group, groupIdx) => (
-          <div key={groupIdx} className="space-y-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-              <Badge variant="outline" className="border-primary/30 text-primary">{group.products.length} offers</Badge>
+        {matchingResults ? (
+          matchingResults.matchedProductGroups.map((group, groupIdx) => (
+            <div key={groupIdx} className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
+                <Badge variant="outline" className="border-primary/30 text-primary">{group.products.length} offers</Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
+                  <ProductCard key={pIdx} product={product} isBestDeal={pIdx === 0} />
+                ))}
+              </div>
             </div>
-            
+          ))
+        ) : rawResults.length > 0 ? (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold font-headline">Discovered Offers</h2>
+              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} found</Badge>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
-                <ProductCard key={pIdx} product={product} isBestDeal={pIdx === 0} />
+              {rawResults.sort((a,b) => a.price - b.price).map((product, pIdx) => (
+                <ProductCard key={pIdx} product={product} isBestDeal={false} />
               ))}
             </div>
           </div>
-        ))}
+        ) : (
+          <div className="text-center py-24 space-y-4">
+            <div className="bg-white/5 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
+              <Search className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold font-headline">No offers found</h2>
+            <p className="text-muted-foreground max-w-sm mx-auto">We couldn't find any products matching "{query}" across our network of stores. Try adjusting your search query.</p>
+            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Try Again</Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -192,8 +220,8 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 text-primary">
               <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{product.rating.toFixed(1)}</span>
-              <span className="text-[10px] text-muted-foreground">({product.reviewsCount})</span>
+              <span className="text-xs font-bold">{product.rating?.toFixed(1) || '0.0'}</span>
+              <span className="text-[10px] text-muted-foreground">({product.reviewsCount || 0})</span>
             </div>
             {product.discountPercentage && (
               <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
@@ -204,13 +232,15 @@ function ProductCard({ product, isBestDeal }: { product: any, isBestDeal: boolea
           <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{product.title}</h3>
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             <Package className="w-3 h-3" />
-            {product.deliveryDetails}
+            {product.deliveryDetails || 'Fast Delivery'}
           </p>
         </div>
 
         <div className="pt-4 border-t border-white/5 flex items-end justify-between">
           <div>
-            <div className="text-xs text-muted-foreground line-through">₹{product.originalPrice?.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground line-through">
+              {product.originalPrice ? `₹${product.originalPrice.toLocaleString()}` : ''}
+            </div>
             <div className="text-2xl font-bold tracking-tight">₹{product.price.toLocaleString()}</div>
           </div>
           <Button 
