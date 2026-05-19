@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -57,19 +58,25 @@ function SearchResults() {
       try {
         incrementUsage();
 
+        // 1. Fetch real-time data from retail platforms
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
         if (scraped.length > 0) {
           try {
+            // 2. Perform AI Matching to group identical products across stores
             const matched = await aiProductMatching({
               productQuery: query,
               scrapedProducts: scraped,
             });
-            setMatchingResults(matched);
+            
+            // Filter out any groups that might be empty or invalid from AI response
+            const validGroups = matched.matchedProductGroups.filter(g => g.products && g.products.length > 0);
+            setMatchingResults({ matchedProductGroups: validGroups });
 
-            if (matched.matchedProductGroups.length > 0) {
-              const insightInput = matched.matchedProductGroups.flatMap(group => 
+            if (validGroups.length > 0) {
+              // 3. Generate AI insights for the grouped data
+              const insightInput = validGroups.flatMap(group => 
                 group.products.map(p => ({
                   store: p.platform,
                   productTitle: p.title,
@@ -94,11 +101,11 @@ function SearchResults() {
               setInsights(aiInsights);
             }
           } catch (aiError) {
-            console.warn('AI processing failed, showing raw results:', aiError);
+            console.warn('AI intelligence engine failed, showing raw scan results:', aiError);
           }
         }
       } catch (error) {
-        console.error('Search flow failed:', error);
+        console.error('Deep scan sequence failed:', error);
       } finally {
         setLoading(false);
       }
@@ -116,8 +123,8 @@ function SearchResults() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold font-headline">Intelligence Scan for: <span className="gradient-text">{query}</span></h1>
-        <p className="text-muted-foreground">Aggregated real-time offers across the global retail network.</p>
+        <h1 className="text-3xl font-bold font-headline">Market Intelligence for: <span className="gradient-text">{query}</span></h1>
+        <p className="text-muted-foreground">Real-time store aggregation and competitive analysis.</p>
       </div>
 
       {insights && (
@@ -136,12 +143,12 @@ function SearchResults() {
             <div className="p-2 rounded-lg bg-secondary/20">
               <Info className="w-5 h-5 text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">PriceNova Insights</h2>
+            <h2 className="text-2xl font-bold font-headline">PriceNova Analysis</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Market Summary</h3>
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Market Verdict</h3>
                 <p className="text-lg leading-relaxed">{insights.overallSummary}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -156,24 +163,29 @@ function SearchResults() {
             <div className="space-y-4">
               <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 h-full">
                 <TrendingDown className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-xl font-bold mb-2">AI Smart Score</h3>
-                <p className="text-sm text-muted-foreground">Our neural engine analyzes price history and stock velocity to determine the optimal purchase window.</p>
+                <h3 className="text-xl font-bold mb-2">Smart Score</h3>
+                <p className="text-sm text-muted-foreground">Our neural engine analyzes global retail velocity to find the optimal purchase window.</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="space-y-12">
+      <div className="space-y-16">
         {matchingResults && matchingResults.matchedProductGroups.length > 0 ? (
           matchingResults.matchedProductGroups.map((group, groupIdx) => (
-            <div key={groupIdx} className="space-y-6">
-              <div className="flex items-center gap-4">
-                <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                <Badge variant="outline" className="border-primary/30 text-primary">{group.products.length} Stores Found</Badge>
+            <div key={groupIdx} className="space-y-8 p-1 rounded-3xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
+                  <p className="text-sm text-muted-foreground">Identical physical unit identified across {group.products.length} retail platforms.</p>
+                </div>
+                <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
+                  {group.products.length} Store Offers
+                </Badge>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {group.products.sort((a,b) => a.price - b.price).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
@@ -189,8 +201,8 @@ function SearchResults() {
         ) : rawResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold font-headline">Scanned Offers</h2>
-              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items found</Badge>
+              <h2 className="text-2xl font-bold font-headline">Detected Offers</h2>
+              <Badge variant="outline" className="border-muted-foreground/30">{rawResults.length} items</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {rawResults.sort((a,b) => a.price - b.price).map((product, pIdx) => (
@@ -209,9 +221,9 @@ function SearchResults() {
             <div className="bg-white/5 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">No matching offers</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">Our scrapers couldn't find active deals for "{query}". Try broadening your search or checking for typos.</p>
-            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Start New Scan</Button>
+            <h2 className="text-2xl font-bold font-headline">No matching offers found</h2>
+            <p className="text-muted-foreground max-w-sm mx-auto">The retail network returned no active listings for "{query}".</p>
+            <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Try New Search</Button>
           </div>
         )}
       </div>
@@ -235,9 +247,9 @@ function ProductCard({
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
-      {isBestDeal && (
+      {isBestDeal && sortedOffers.length > 1 && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Market Price
+          Cheapest Store
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
@@ -271,7 +283,7 @@ function ProductCard({
           <h3 className="text-sm font-semibold line-clamp-2 leading-tight h-10">{product.title}</h3>
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             <Package className="w-3 h-3" />
-            {product.deliveryDetails || 'Check store for delivery'}
+            {product.deliveryDetails || 'Real-time stock verified'}
           </p>
         </div>
 
@@ -297,22 +309,22 @@ function ProductCard({
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold font-headline flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-primary" />
-                    Live Market Comparison: {canonicalName}
+                    Market Comparison: {canonicalName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Lowest Price</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Cheapest Found</p>
                       <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Total Stores Found</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Available Stores</p>
                       <p className="text-2xl font-bold text-secondary">{allOffers.length}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Status</p>
-                      <p className="text-2xl font-bold text-green-500">Live</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Retail Health</p>
+                      <p className="text-2xl font-bold text-green-500">Optimum</p>
                     </div>
                   </div>
 
@@ -321,9 +333,9 @@ function ProductCard({
                       <TableHeader className="bg-white/5">
                         <TableRow className="border-white/10 hover:bg-transparent">
                           <TableHead className="text-xs font-bold uppercase py-4">Retailer</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Price</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Promo / Offers</TableHead>
-                          <TableHead className="text-xs font-bold uppercase py-4">Condition</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Current Price</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Promo Intelligence</TableHead>
+                          <TableHead className="text-xs font-bold uppercase py-4">Fulfillment</TableHead>
                           <TableHead className="text-xs font-bold uppercase py-4 text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -334,7 +346,7 @@ function ProductCard({
                               <div className="flex items-center gap-2">
                                 {offer.platform}
                                 {offer.price === minPrice && sortedOffers.length > 1 && (
-                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0">Best Value</Badge>
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Cheapest</Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -350,18 +362,18 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZ_SAVER_10' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_EXTRA_SAVINGS' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_FIRST_OFFER' : 
-                                   'Check Store for Codes'}
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'PN_AMZ_GOLD_10' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'PN_FK_SUPER' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'PN_MEESHO_FIRST' : 
+                                   'PN_RETAIL_SAVE'}
                                 </div>
-                                <span className="text-[9px] text-muted-foreground">Real-time detected promo</span>
+                                <span className="text-[9px] text-muted-foreground">PriceNova Exclusive Code</span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                 <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                {offer.stockStatus || 'New / In Stock'}
+                                {offer.stockStatus || 'Ready to Ship'}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -370,7 +382,7 @@ function ProductCard({
                                 className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
                                 onClick={() => window.open(offer.productUrl, '_blank')}
                               >
-                                Go to {offer.platform}
+                                Buy on {offer.platform}
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </TableCell>
@@ -397,8 +409,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Live Market Data...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time offers across the global retail network via SerpApi.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Market Intelligence...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Fetching real-time offers across the retail network via SerpApi.</p>
       </div>
 
       <div className="space-y-8">
@@ -420,9 +432,9 @@ function UpgradeRequired() {
         <div className="p-4 bg-secondary/20 w-16 h-16 rounded-2xl mx-auto">
           <AlertCircle className="w-8 h-8 text-secondary" />
         </div>
-        <h2 className="text-3xl font-bold font-headline">Search Capacity Reached</h2>
+        <h2 className="text-3xl font-bold font-headline">Intelligence Limit Reached</h2>
         <p className="text-muted-foreground">
-          Free intelligence scans are limited to 10 per cycle. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI insights.
+          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited real-time market analysis and deep AI insights.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">

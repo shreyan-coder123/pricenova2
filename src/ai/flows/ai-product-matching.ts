@@ -54,23 +54,28 @@ const productMatchingPrompt = ai.definePrompt({
   name: 'productMatchingPrompt',
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
-  prompt: `You are an intelligent AI product matching engine for PriceNova.
-Your CRITICAL task is to group IDENTICAL physical products across different platforms (Amazon, Flipkart, Meesho, Meesho India, Croma, etc.).
+  prompt: `You are an expert product data analyst for PriceNova.
+Your CRITICAL task is to identify and group IDENTICAL physical products from a list of scraped data to enable price comparison across different platforms (Amazon, Flipkart, Meesho, etc.).
 
-Strict Matching Guidelines:
-1. If two products have the same model name, specifications (e.g., "8GB RAM, 128GB Storage"), and color, they MUST be in the same group.
-2. Be aggressive in grouping. Small differences in titles (e.g., "Apple iPhone 16" vs "iPhone 16 (Black)") should still result in a group if it's clearly the same device.
-3. Your goal is to provide a comprehensive comparison. If you find multiple listings for the same item, group them so the user can see all store options in one place.
-4. If a query is "Sony A7R V", group all listings of that camera from all platforms together.
+CRITICAL INSTRUCTIONS:
+1. IDENTICAL PRODUCT DEFINITION: Products are identical if they are the exact same make, model, variant (RAM, Storage, Size, etc.), and condition (New).
+2. IGNORE PRICE: Do not use price differences to decide if products are different. The SAME product will have different prices at different stores.
+3. BE AGGRESSIVE: If you see "iPhone 16 128GB" and "Apple iPhone 16 (128 GB, Black)", these are the SAME product. They MUST be in the same group.
+4. TARGET: The user wants to compare stores. Your goal is to maximize the number of stores in each group.
+5. VARIANTS: Only create separate groups for actual spec differences (e.g., 128GB vs 256GB). If specs are identical but names vary slightly, group them.
+6. EXAMPLES:
+   - "Sony WH-1000XM5" and "Sony XM5 Headphones" -> SAME group.
+   - "Nike Pegasus 40" and "Nike Air Zoom Pegasus 40" -> SAME group.
+   - "OnePlus 12 (12GB RAM)" and "OnePlus 12 (16GB RAM)" -> DIFFERENT groups.
 
 User's search: "{{{productQuery}}}"
 
 Product Data to Analyze:
 {{#each scrapedProducts}}
-Store: {{this.platform}} | Title: {{{this.title}}} | Price: ₹{{this.price}}
+- Store: {{this.platform}} | Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Identify the groups and return a JSON object with 'matchedProductGroups'. Each group must have a standardized 'canonicalProductName'.`,
+Analyze ALL products. Group them and return a JSON object with 'matchedProductGroups'. Every input product must belong to a group.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
@@ -80,7 +85,13 @@ const aiProductMatchingFlow = ai.defineFlow(
     outputSchema: AIProductMatchingOutputSchema,
   },
   async (input) => {
-    const { output } = await productMatchingPrompt(input);
+    // If we have many products, we want to ensure the AI doesn't cut off.
+    // We send up to 50 for robust grouping quality.
+    const limitedInput = {
+      ...input,
+      scrapedProducts: input.scrapedProducts.slice(0, 50)
+    };
+    const { output } = await productMatchingPrompt(limitedInput);
     return output!;
   }
 );
