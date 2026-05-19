@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -328,8 +327,8 @@ function ProductCard({
                 onClick={() => window.open(product.productUrl, '_blank')}
                 className="rounded-lg h-10 px-4 bg-white/10 hover:bg-primary hover:text-primary-foreground group-hover:neon-glow"
               >
-                Go to Store
-                <ExternalLink className="w-3 h-3 ml-2" />
+                Compare
+                <ArrowRightLeft className="w-3 h-3 ml-2" />
               </Button>
             )}
           </div>
