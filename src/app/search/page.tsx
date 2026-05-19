@@ -67,9 +67,15 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
+            // Filter out groups with only 1 product if better groups exist, 
+            // and sort groups that have the most variety of stores
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
-              .sort((a, b) => b.products.length - a.products.length);
+              .sort((a, b) => {
+                const storesA = new Set(a.products.map(p => p.platform)).size;
+                const storesB = new Set(b.products.map(p => p.platform)).size;
+                return storesB - storesA; // Prioritize groups with more platforms
+              });
             
             setMatchingResults({ matchedProductGroups: validGroups });
 
@@ -99,11 +105,11 @@ function SearchResults() {
               setInsights(aiInsights);
             }
           } catch (aiError) {
-            console.warn('AI intelligence engine failed, showing raw scan results:', aiError);
+            console.warn('AI matching failed, showing raw results:', aiError);
           }
         }
       } catch (error) {
-        console.error('Deep scan sequence failed:', error);
+        console.error('Deep scan failed:', error);
       } finally {
         setLoading(false);
       }
@@ -176,10 +182,10 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Compared across {group.products.length} major retail platforms.</p>
+                  <p className="text-sm text-muted-foreground">Compared across {new Set(group.products.map(p => p.platform)).size} major retail platforms.</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Store Offers
+                  {group.products.length} Offers Available
                 </Badge>
               </div>
               
@@ -242,6 +248,7 @@ function ProductCard({
 }) {
   const sortedOffers = [...allOffers].sort((a, b) => a.price - b.price);
   const minPrice = sortedOffers[0]?.price || 0;
+  const platformCount = new Set(sortedOffers.map(o => o.platform)).size;
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
@@ -317,8 +324,8 @@ function ProductCard({
                       <p className="text-2xl font-bold text-primary">₹{minPrice.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Available Stores</p>
-                      <p className="text-2xl font-bold text-secondary">{sortedOffers.length}</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Scanned</p>
+                      <p className="text-2xl font-bold text-secondary">{platformCount}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Stock Health</p>
@@ -407,8 +414,8 @@ function SearchLoading() {
           <Cpu className="w-16 h-16 text-primary animate-pulse-glow" />
           <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
         </div>
-        <h2 className="text-3xl font-bold font-headline animate-pulse">Aggregating Global Retailers...</h2>
-        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Scanning Amazon, Flipkart, Meesho, and more for identical matches.</p>
+        <h2 className="text-3xl font-bold font-headline animate-pulse">Synchronizing Retail Network...</h2>
+        <p className="text-muted-foreground animate-pulse [animation-delay:200ms]">Matching Amazon, Flipkart, Meesho, and Myntra listings for comparison.</p>
       </div>
 
       <div className="space-y-8">

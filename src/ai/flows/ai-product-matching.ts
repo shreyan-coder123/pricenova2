@@ -50,18 +50,18 @@ const productMatchingPrompt = ai.definePrompt({
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
   prompt: `You are the Lead Data Scientist for PriceNova.
-Your ULTIMATE goal is to group IDENTICAL physical products across different stores (Amazon, Flipkart, Meesho, Croma, Ajio, Myntra, etc.) for a price comparison table.
+Your MISSION is to consolidate IDENTICAL physical products across different platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, etc.) into a SINGLE group for price comparison.
 
-CRITICAL GROUPING RULES:
-1. BE ULTRA-AGGRESSIVE: If two products are the same model and variant (e.g., iPhone 16 128GB), they MUST be in the same group. 
-2. IGNORE TITLE NOISE: Stores often use different titles. If the brand and model match, they are the same.
-3. MANDATORY MULTI-STORE GOAL: The user wants to see comparison across multiple platforms. Group as many variants together as logically possible to provide a broad market view.
-4. SAME PRODUCT EXAMPLES:
-   - "Apple iPhone 16, 128GB, Black" (Amazon)
-   - "iPhone 16 (128 GB) - Black" (Flipkart)
-   - "Apple iPhone 16 128GB Black - Sealed" (Meesho)
-   -> THESE MUST BE ONE GROUP.
-5. AT LEAST 3 PLATFORMS: Actively look for matching items across different platforms. If there's an Amazon link and a Flipkart link for the same product, they MUST be grouped together.
+CRITICAL GROUPING RULES (MANDATORY):
+1. **FUZZY MATCHING**: Titles vary across stores. Ignore noise like "Pack of 2", "Limited Edition", "New Model 2024", or the Seller name if the core product is the same.
+2. **PRIORITIZE VARIETY**: Your primary goal is to show the user multiple store options. If a product on Flipkart looks like the same model as one on Amazon, GROUP THEM.
+3. **IDENTIFY CORE PRODUCTS**:
+   - "PrettyKrafts Saree Cover" (Amazon)
+   - "Saree Cover for Storage - Blue" (Flipkart)
+   - "Pretty Krafts Non-Woven Bags" (Meesho)
+   -> THESE ARE IDENTICAL. Group them.
+4. **BRAND NOISE**: Sometimes the brand name is slightly different (e.g., "PrettyKrafts" vs "Pretty Krafts"). If the item looks identical, group it.
+5. **AT LEAST 3 PLATFORMS**: Actively search through the provided list to find matches across at least 3 unique platforms. Do not be conservative. It is better to group similar items than to show the user a single-store result.
 
 User Search Query: "{{{productQuery}}}"
 
@@ -70,7 +70,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Return the groups. Ensure each group contains all matching products from every available platform. Aim for groups with 3+ platforms whenever possible.`,
+Return the groups. Every group MUST aim to have products from multiple platforms (Amazon, Flipkart, Meesho, etc.). If you see 10 items and 3 are on Amazon and 2 on Flipkart for the same query, they likely belong in the same comparison group.`,
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
