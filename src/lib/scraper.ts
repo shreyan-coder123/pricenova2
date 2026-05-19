@@ -6,11 +6,12 @@ import { ScrapedProduct } from '@/ai/flows/ai-product-matching';
 /**
  * Real-time scraper using SerpApi Google Shopping engine.
  * Fetches actual product data including real images, prices, and sellers.
+ * We fetch 100 results to ensure we capture multiple platforms for comparison.
  */
 export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
   const apiKey = process.env.SERPAPI_KEY || '4497efce288f226e7abd17121b9844a1b77453303c43ef8ae7643a690f469662';
   
-  // Increased num to 100 to get a wider range of platforms for comparison
+  // Fetching 100 results and focusing on India (gl=in) to get diverse local platforms
   const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${apiKey}&hl=en&gl=in&num=100`;
 
   try {

@@ -68,6 +68,7 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
+            // Prioritize groups that have more store platforms for better comparison
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {

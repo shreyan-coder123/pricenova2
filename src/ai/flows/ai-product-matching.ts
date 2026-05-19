@@ -51,7 +51,7 @@ const productMatchingPrompt = ai.definePrompt({
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
   prompt: `You are the Lead Data Scientist for PriceNova. 
-Your ABSOLUTE MISSION is to consolidate IDENTICAL physical products across DIFFERENT platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, Croma, Nykaa, etc.) into a SINGLE group.
+Your ABSOLUTE MISSION is to consolidate IDENTICAL physical products across DIFFERENT platforms (Amazon, Flipkart, Meesho, Myntra, Ajio, Nykaa, etc.) into a SINGLE group.
 
 CRITICAL GROUPING RULES:
 1. **ULTRA-FUZZY MATCHING**: Titles on Amazon, Flipkart, and Meesho are often different for the SAME item. Ignore text like "Pack of 1", "Official Global Store", "Online Best Deal", or seller codes. 
