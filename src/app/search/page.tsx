@@ -67,7 +67,6 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Critical: Sort groups by platform variety to ensure multi-platform results appear first
             const validGroups = matched.matchedProductGroups
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
@@ -189,7 +188,6 @@ function SearchResults() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {/* Show top products from the group */}
                 {group.products.sort((a,b) => a.price - b.price).slice(0, 6).map((product, pIdx) => (
                   <ProductCard 
                     key={pIdx} 
@@ -248,7 +246,7 @@ function ProductCard({
 }) {
   const sortedOffers = [...allOffers].sort((a, b) => a.price - b.price);
   const minPrice = sortedOffers[0]?.price || 0;
-  const platformCount = new Set(sortedOffers.map(o => o.platform)).size;
+  const uniquePlatforms = Array.from(new Set(sortedOffers.map(o => o.platform)));
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
@@ -286,6 +284,16 @@ function ProductCard({
             )}
           </div>
           <h3 className="text-sm font-semibold line-clamp-2 leading-tight h-10">{product.title}</h3>
+          
+          <div className="flex flex-wrap gap-1 items-center">
+            <span className="text-[10px] text-muted-foreground">Buy at:</span>
+            {uniquePlatforms.map((p, idx) => (
+              <span key={idx} className="text-[10px] font-medium text-primary">
+                {p}{idx < uniquePlatforms.length - 1 ? ',' : ''}
+              </span>
+            ))}
+          </div>
+
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             <Package className="w-3 h-3" />
             {product.deliveryDetails || 'Real-time stock verified'}
@@ -325,7 +333,7 @@ function ProductCard({
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Platforms Matched</p>
-                      <p className="text-2xl font-bold text-secondary">{platformCount}</p>
+                      <p className="text-2xl font-bold text-secondary">{uniquePlatforms.length}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Price Health</p>
@@ -382,14 +390,15 @@ function ProductCard({
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button 
-                                size="sm" 
-                                className="h-8 rounded-lg bg-white/5 hover:bg-primary hover:text-primary-foreground border border-white/10"
-                                onClick={() => window.open(offer.productUrl, '_blank')}
+                              <a 
+                                href={offer.productUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs font-bold text-primary hover:underline flex items-center justify-end gap-1"
                               >
-                                View Offer
-                                <ExternalLink className="w-3 h-3 ml-2" />
-                              </Button>
+                                Buy at {offer.platform}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
                             </TableCell>
                           </TableRow>
                         ))}
