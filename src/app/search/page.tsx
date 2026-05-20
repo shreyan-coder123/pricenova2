@@ -57,13 +57,13 @@ function SearchResults() {
       try {
         incrementUsage();
 
-        // 1. Fetch live data
+        // 1. Fetch live data with built-in fallback
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
         if (scraped.length > 0) {
           try {
-            // 2. Attempt AI Matching
+            // 2. Attempt AI Matching with ultra-aggressive grouping
             const matched = await aiProductMatching({
               productQuery: query,
               scrapedProducts: scraped,
@@ -72,8 +72,7 @@ function SearchResults() {
             let validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0);
 
-            // FALLBACK 1: If AI failed to group products or returned nothing, 
-            // group products individually so we show something.
+            // FALLBACK logic: Ensure we show results even if AI fails to group them
             if (validGroups.length === 0) {
               validGroups = scraped.map(p => ({
                 canonicalProductName: p.title,
@@ -81,7 +80,7 @@ function SearchResults() {
               }));
             }
 
-            // Priority to those with most platform variety
+            // Priority to groups showing multi-platform availability
             validGroups.sort((a, b) => {
               const storesA = new Set(a.products.map(p => p.platform)).size;
               const storesB = new Set(b.products.map(p => p.platform)).size;
@@ -109,7 +108,6 @@ function SearchResults() {
                 }))
               );
 
-              // Limit insights payload
               const aiInsights = await aiShoppingInsights({
                 productData: insightInput.slice(0, 15),
                 searchQuery: query
@@ -117,8 +115,7 @@ function SearchResults() {
               setInsights(aiInsights);
             }
           } catch (aiError) {
-            console.warn('AI analysis deferred:', aiError);
-            // FALLBACK 2: On AI failure, fallback to raw grouping
+            console.warn('AI analysis failed, showing raw comparison:', aiError);
             const fallbackGroups = scraped.map(p => ({
               canonicalProductName: p.title,
               products: [p]
@@ -126,11 +123,10 @@ function SearchResults() {
             setMatchingResults({ matchedProductGroups: fallbackGroups });
           }
         } else {
-          // FALLBACK 3: Ensure we don't just stay in loading state if nothing found
           setMatchingResults({ matchedProductGroups: [] });
         }
       } catch (error) {
-        console.error('Deep scan interrupted:', error);
+        console.error('Search lifecycle interrupted:', error);
         setMatchingResults({ matchedProductGroups: [] });
       } finally {
         setLoading(false);
@@ -236,7 +232,7 @@ function SearchResults() {
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold font-headline">No matching offers found</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">Try a broader search query or check back later. We're constantly expanding our store network.</p>
+            <p className="text-muted-foreground max-w-sm mx-auto">Try a broader search query or check back later. We're constantly scanning the market.</p>
             <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">New Scan</Button>
           </div>
         )}
@@ -264,7 +260,7 @@ function ProductCard({
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
       {isBestDeal && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
-          Best Price Across Market
+          Best Market Price
         </div>
       )}
       <CardContent className="p-6 flex flex-col h-full space-y-4">
