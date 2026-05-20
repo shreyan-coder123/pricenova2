@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ScrapedProduct } from '@/ai/flows/ai-product-matching';
@@ -6,7 +5,6 @@ import { ScrapedProduct } from '@/ai/flows/ai-product-matching';
 /**
  * Real-time scraper using SerpApi Google Shopping engine.
  * Fetches actual product data including real images, prices, and sellers.
- * We fetch 100 results to ensure we capture multiple platforms for comparison.
  */
 export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
   const apiKey = process.env.SERPAPI_KEY || '4497efce288f226e7abd17121b9844a1b77453303c43ef8ae7643a690f469662';
@@ -21,7 +19,8 @@ export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
     });
     
     if (!response.ok) {
-      throw new Error(`SerpApi responded with status: ${response.status}`);
+      console.error(`SerpApi error: ${response.status}`);
+      return [];
     }
 
     const data = await response.json();
@@ -31,20 +30,23 @@ export async function scrapeRealTime(query: string): Promise<ScrapedProduct[]> {
       return [];
     }
 
-    return data.shopping_results.map((item: any) => ({
-      platform: item.source || 'Online Store',
-      title: item.title || 'Product Name Unavailable',
-      price: item.extracted_price || 0,
-      originalPrice: item.old_price ? parseFloat(item.old_price.replace(/[^0-9.]/g, '')) : undefined,
-      discountPercentage: item.extensions?.find((ext: string) => ext.includes('% off')) || undefined,
-      imageUrl: item.thumbnail || 'https://picsum.photos/seed/placeholder/400/400',
-      productUrl: item.link || '#',
-      rating: item.rating,
-      reviewsCount: item.reviews,
-      seller: item.source || 'Verified Seller',
-      deliveryDetails: item.delivery || 'Shipping details at store',
-      stockStatus: 'In Stock'
-    }));
+    // Filter out results that don't have basic data and map them
+    return data.shopping_results
+      .filter((item: any) => item.title && (item.extracted_price || item.price))
+      .map((item: any) => ({
+        platform: item.source || 'Online Store',
+        title: item.title,
+        price: item.extracted_price || parseFloat(item.price?.replace(/[^0-9.]/g, '') || '0'),
+        originalPrice: item.old_price ? parseFloat(item.old_price.replace(/[^0-9.]/g, '')) : undefined,
+        discountPercentage: item.extensions?.find((ext: string) => ext.includes('% off')) || undefined,
+        imageUrl: item.thumbnail || 'https://picsum.photos/seed/placeholder/400/400',
+        productUrl: item.link || '#',
+        rating: item.rating,
+        reviewsCount: item.reviews,
+        seller: item.source || 'Verified Seller',
+        deliveryDetails: item.delivery || 'Shipping details at store',
+        stockStatus: 'In Stock'
+      }));
   } catch (error) {
     console.error('SerpApi scraping failed:', error);
     return [];

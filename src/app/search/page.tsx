@@ -57,11 +57,13 @@ function SearchResults() {
       try {
         incrementUsage();
 
+        // 1. Fetch live data
         const scraped = await scrapeRealTime(query);
         setRawResults(scraped);
 
         if (scraped.length > 0) {
           try {
+            // 2. Attempt AI Matching
             const matched = await aiProductMatching({
               productQuery: query,
               scrapedProducts: scraped,
@@ -70,7 +72,7 @@ function SearchResults() {
             let validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0);
 
-            // Fallback: If AI failed to group products or returned nothing, 
+            // FALLBACK 1: If AI failed to group products or returned nothing, 
             // group products individually so we show something.
             if (validGroups.length === 0) {
               validGroups = scraped.map(p => ({
@@ -79,7 +81,7 @@ function SearchResults() {
               }));
             }
 
-            // Sort groups: Priority to those with most platform variety
+            // Priority to those with most platform variety
             validGroups.sort((a, b) => {
               const storesA = new Set(a.products.map(p => p.platform)).size;
               const storesB = new Set(b.products.map(p => p.platform)).size;
@@ -107,7 +109,7 @@ function SearchResults() {
                 }))
               );
 
-              // Limit insights to top 10 products to avoid payload limits
+              // Limit insights payload
               const aiInsights = await aiShoppingInsights({
                 productData: insightInput.slice(0, 15),
                 searchQuery: query
@@ -116,7 +118,7 @@ function SearchResults() {
             }
           } catch (aiError) {
             console.warn('AI analysis deferred:', aiError);
-            // On AI failure, fallback to raw grouping
+            // FALLBACK 2: On AI failure, fallback to raw grouping
             const fallbackGroups = scraped.map(p => ({
               canonicalProductName: p.title,
               products: [p]
@@ -124,6 +126,7 @@ function SearchResults() {
             setMatchingResults({ matchedProductGroups: fallbackGroups });
           }
         } else {
+          // FALLBACK 3: Ensure we don't just stay in loading state if nothing found
           setMatchingResults({ matchedProductGroups: [] });
         }
       } catch (error) {
@@ -150,18 +153,8 @@ function SearchResults() {
         <p className="text-muted-foreground">Aggregated real-time market data across Amazon, Flipkart, Meesho, and more.</p>
       </div>
 
-      {insights && (
-        <div className={`relative p-8 rounded-3xl bg-secondary/5 border border-secondary/20 space-y-6 ${!isProUser ? 'blur-sm select-none pointer-events-none' : ''}`}>
-          {!isProUser && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
-              <div className="glass p-8 rounded-2xl max-w-sm space-y-4">
-                <AlertCircle className="w-12 h-12 text-secondary mx-auto" />
-                <h3 className="text-xl font-bold">Pro Intelligence Locked</h3>
-                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis and multi-store grouping.</p>
-                <Button onClick={() => router.push('/#pricing')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full">Upgrade Now</Button>
-              </div>
-            </div>
-          )}
+      {insights && isProUser && (
+        <div className="p-8 rounded-3xl bg-secondary/5 border border-secondary/20 space-y-6">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary/20">
               <Info className="w-5 h-5 text-secondary" />
@@ -191,6 +184,22 @@ function SearchResults() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {!isProUser && insights && (
+        <div className="relative p-8 rounded-3xl bg-secondary/5 border border-secondary/20 overflow-hidden">
+           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-md p-6 text-center">
+              <div className="glass p-8 rounded-2xl max-w-sm space-y-4">
+                <AlertCircle className="w-12 h-12 text-secondary mx-auto" />
+                <h3 className="text-xl font-bold">Pro Intelligence Locked</h3>
+                <p className="text-sm text-muted-foreground">Upgrade to PRO to unlock deep AI analysis and multi-store grouping.</p>
+                <Button onClick={() => router.push('/#pricing')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full">Upgrade Now</Button>
+              </div>
+            </div>
+            <div className="blur-lg select-none pointer-events-none opacity-50">
+               <div className="h-64 bg-white/5 rounded-2xl" />
+            </div>
         </div>
       )}
 
@@ -265,7 +274,7 @@ function ProductCard({
             alt={product.title} 
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=PriceCart+Verified';
+              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Price+Cart+Verified';
             }}
           />
           <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10">

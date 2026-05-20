@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview An AI product matching engine that identifies and groups identical physical products
- * across multiple e-commerce platforms based on scraped product data.
+ * across multiple e-commerce platforms.
  */
 
 import { ai } from '@/ai/genkit';
@@ -56,7 +56,7 @@ STRICT GROUPING RULES:
 1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles vary wildly across stores. Ignore platform fluff like "Great Indian Festival", "Lowest Price", "Deal of the Day", or seller codes. If they are the same physical model (e.g., iPhone 16), THEY MUST BE GROUPED.
 2. **PRIORITIZE CROSS-PLATFORM**: Your primary goal is to find listings for the same product on Amazon, Flipkart, and Meesho and group them together. 
 3. **MODEL IDENTIFICATION**: Use model numbers, storage capacities (128GB, 256GB), RAM, and specific colors to identify matches.
-4. **FALLBACK**: If a product doesn't have a cross-platform match, still include it in its own group. DO NOT DISCARD PRODUCTS. Every input product must end up in a group.
+4. **NO PRODUCT LEFT BEHIND**: Every single input product MUST be included in the output. If a product doesn't have a match, put it in its own group.
 5. **CANONICAL NAMING**: Create a clean, concise name for the group (e.g., "Apple iPhone 16 (Black, 128GB)").
 
 User Search Query: "{{{productQuery}}}"
@@ -66,7 +66,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Group all products into groups. Products that are the same physical item across different stores MUST be in the same group.`
+Group all products into groups. Ensure that products that are likely the same physical item across different stores are consolidated.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
