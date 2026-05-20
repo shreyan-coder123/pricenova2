@@ -49,7 +49,7 @@ const productMatchingPrompt = ai.definePrompt({
   name: 'productMatchingPrompt',
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
-  prompt: `You are the Lead Grouping Engine for PriceNova. 
+  prompt: `You are the Lead Grouping Engine for Price Cart. 
 Your SOLE PURPOSE is to group identical physical products across Amazon, Flipkart, Meesho, and others into ONE group.
 
 STRICT GROUPING RULES:

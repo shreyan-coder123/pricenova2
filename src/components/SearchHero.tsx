@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -36,7 +35,7 @@ export function SearchHero() {
             <span className="gradient-text">Shopping Intelligence</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            PriceNova scrapes the entire web in real-time to find you the best deals across 7 major platforms. No accounts, no data storage, just pure AI insights.
+            Price Cart scrapes the entire web in real-time to find you the best deals across 7 major platforms. No accounts, no data storage, just pure AI insights.
           </p>
         </div>
 

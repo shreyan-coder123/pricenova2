@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Zap, XCircle, CreditCard } from 'lucide-react';
+import { Check, XCircle, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { setProStatus, clearProStatus } from '@/lib/usage';
@@ -30,7 +30,7 @@ export function PricingSection() {
         window.dispatchEvent(new Event('storage'));
         toast({
           title: "Payment Successful!",
-          description: "PriceNova PRO features are now active.",
+          description: "Price Cart PRO features are now active.",
         });
       }, 3000);
       return;
@@ -40,9 +40,9 @@ export function PricingSection() {
       key: razorpayKey,
       amount: 50000, // 500 INR in paisa
       currency: 'INR',
-      name: 'PriceNova Intelligence',
+      name: 'Price Cart Intelligence',
       description: 'Monthly Pro Subscription',
-      image: 'https://picsum.photos/seed/pricenova/200/200',
+      image: 'https://picsum.photos/seed/pricecart/200/200',
       handler: function(response: any) {
         setProStatus(response.razorpay_payment_id || 'PRO_ACTIVATED_' + Date.now());
         window.dispatchEvent(new Event('storage'));
@@ -52,8 +52,8 @@ export function PricingSection() {
         });
       },
       prefill: {
-        name: 'PriceNova Shopper',
-        email: 'shopper@pricenova.ai',
+        name: 'Price Cart Shopper',
+        email: 'shopper@pricecart.ai',
         contact: '9999999999'
       },
       theme: {
@@ -108,7 +108,7 @@ export function PricingSection() {
             BEST VALUE
           </div>
           <div className="mb-8">
-            <h3 className="text-2xl font-bold font-headline mb-2">PriceNova PRO</h3>
+            <h3 className="text-2xl font-bold font-headline mb-2">Price Cart PRO</h3>
             <p className="text-muted-foreground">Unlimited intelligence for serious savings.</p>
           </div>
           <div className="text-4xl font-bold mb-8">₹500 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>

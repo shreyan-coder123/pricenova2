@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -18,7 +17,7 @@ export function Navbar() {
             <Cpu className="w-6 h-6 text-primary neon-glow" />
           </div>
           <span className="text-xl font-bold tracking-tighter gradient-text font-headline">
-            PRICENOVA
+            PRICE CART
           </span>
         </Link>
 

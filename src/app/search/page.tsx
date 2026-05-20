@@ -9,7 +9,7 @@ import { aiShoppingInsights, AIShoppingInsightsOutput } from '@/ai/flows/ai-shop
 import { useSearchUsage } from '@/hooks/use-search-usage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Star, Info, TrendingDown, Package, ShieldCheck, AlertCircle, Cpu, Search, ArrowRightLeft, Ticket, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Star, Info, TrendingDown, ShieldCheck, AlertCircle, Cpu, Search, ArrowRightLeft, Ticket, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -145,7 +145,7 @@ function SearchResults() {
             <div className="p-2 rounded-lg bg-secondary/20">
               <Info className="w-5 h-5 text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold font-headline">PriceNova Insights</h2>
+            <h2 className="text-2xl font-bold font-headline">Price Cart Insights</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
@@ -244,7 +244,7 @@ function ProductCard({
             alt={product.title} 
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=PriceNova+Verified';
+              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=PriceCart+Verified';
             }}
           />
           <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold border border-white/10">
@@ -364,10 +364,10 @@ function ProductCard({
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-medium">
                                   <Ticket className="w-3 h-3" />
-                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZN_PRICENOVA' : 
-                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_PN_SAVE' : 
-                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_X_PN' : 
-                                   'PN_DEAL_10'}
+                                  {offer.platform.toLowerCase().includes('amazon') ? 'AMZN_PRICECART' : 
+                                   offer.platform.toLowerCase().includes('flipkart') ? 'FK_PC_SAVE' : 
+                                   offer.platform.toLowerCase().includes('meesho') ? 'MEESHO_X_PC' : 
+                                   'PC_DEAL_10'}
                                 </div>
                                 <span className="text-[9px] text-muted-foreground">Auto-apply available</span>
                               </div>
@@ -437,7 +437,7 @@ function UpgradeRequired() {
         </div>
         <h2 className="text-3xl font-bold font-headline">Scan Limit Reached</h2>
         <p className="text-muted-foreground">
-          Free intelligence scans are limited to 5 per session. Upgrade to PriceNova PRO for unlimited market grouping and deep insights.
+          Free intelligence scans are limited to 5 per session. Upgrade to Price Cart PRO for unlimited market grouping and deep insights.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">

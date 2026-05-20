@@ -1,10 +1,9 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'PriceNova | AI-Powered Shopping Intelligence',
+  title: 'Price Cart | AI-Powered Shopping Intelligence',
   description: 'Real-time product comparison across Amazon, Flipkart, Myntra, Ajio, and more with AI shopping insights.',
 };
 

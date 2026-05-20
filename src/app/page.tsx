@@ -1,4 +1,3 @@
-
 import { Navbar } from '@/components/Navbar';
 import { SearchHero } from '@/components/SearchHero';
 import { PricingSection } from '@/components/PricingSection';
@@ -44,10 +43,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <Cpu className="w-6 h-6 text-primary" />
-            <span className="font-bold tracking-tighter gradient-text">PRICENOVA</span>
+            <span className="font-bold tracking-tighter gradient-text">PRICE CART</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 PriceNova. AI-Powered Shopping Excellence. Built for the Future.
+            © 2024 Price Cart. AI-Powered Shopping Excellence. Built for the Future.
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">Terms</a>

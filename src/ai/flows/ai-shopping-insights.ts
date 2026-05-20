@@ -63,7 +63,7 @@ const prompt = ai.definePrompt({
   name: 'aiShoppingInsightsPrompt',
   input: {schema: AIShoppingInsightsInputSchema},
   output: {schema: AIShoppingInsightsOutputSchema},
-  prompt: `You are PriceNova, a futuristic AI shopping assistant. Your goal is to provide concise, AI-generated shopping insights and recommendations based on the provided product data. The user searched for "{{{searchQuery}}}" and here are the comparison results:
+  prompt: `You are Price Cart, a futuristic AI shopping assistant. Your goal is to provide concise, AI-generated shopping insights and recommendations based on the provided product data. The user searched for "{{{searchQuery}}}" and here are the comparison results:
 
 Product Data:
 {{#each productData}}
