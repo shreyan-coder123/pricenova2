@@ -2,7 +2,7 @@
 
 const USAGE_KEY = 'pricenova_usage_v1';
 const PRO_TOKEN_KEY = 'pricenova_pro_token';
-const MAX_FREE_SEARCHES = 10;
+const MAX_FREE_SEARCHES = 5;
 
 export function getSearchCount(): number {
   if (typeof window === 'undefined') return 0;

@@ -19,7 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-// FIXED: Corrected the Table component import path
 import {
   Table,
   TableBody,
@@ -68,7 +67,6 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            // Prioritize groups that have results from multiple platforms
             const validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
@@ -439,7 +437,7 @@ function UpgradeRequired() {
         </div>
         <h2 className="text-3xl font-bold font-headline">Scan Limit Reached</h2>
         <p className="text-muted-foreground">
-          Free intelligence scans are limited to 10 per session. Upgrade to PriceNova PRO for unlimited market grouping and deep insights.
+          Free intelligence scans are limited to 5 per session. Upgrade to PriceNova PRO for unlimited market grouping and deep insights.
         </p>
         <div className="space-y-3">
           <Button onClick={() => window.location.href = '/#pricing'} className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">

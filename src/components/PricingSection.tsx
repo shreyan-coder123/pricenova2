@@ -17,7 +17,6 @@ export function PricingSection() {
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    // UPDATED: Using the provided Live Razorpay Key
     const razorpayKey = 'rzp_live_SrZ2OPKQPCbILu';
 
     if (typeof window.Razorpay === 'undefined') {
@@ -26,7 +25,6 @@ export function PricingSection() {
         description: "Connecting to encrypted payment gateway.",
       });
       
-      // Fallback for simulation if script load issues occur
       setTimeout(() => {
         setProStatus('SIMULATED_TOKEN_' + Date.now());
         window.dispatchEvent(new Event('storage'));
@@ -96,7 +94,7 @@ export function PricingSection() {
           </div>
           <div className="text-4xl font-bold mb-8">₹0 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
           <ul className="space-y-4 mb-10 flex-grow">
-            <PricingItem text="10 searches only" />
+            <PricingItem text="5 searches only" />
             <PricingItem text="Standard market matching" />
             <PricingItem text="Public listings only" />
           </ul>
