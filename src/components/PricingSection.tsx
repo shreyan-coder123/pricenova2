@@ -17,7 +17,8 @@ export function PricingSection() {
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    const razorpayKey = 'rzp_test_SrFaWFczaTkzqh';
+    // UPDATED: Using the provided Live Razorpay Key
+    const razorpayKey = 'rzp_live_SrZ2OPKQPCbILu';
 
     if (typeof window.Razorpay === 'undefined') {
       toast({

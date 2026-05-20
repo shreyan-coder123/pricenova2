@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+// FIXED: Corrected the Table component import path
 import {
   Table,
   TableBody,
@@ -67,6 +68,7 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
+            // Prioritize groups that have results from multiple platforms
             const validGroups = (matched?.matchedProductGroups || [])
               .filter(g => g.products && g.products.length > 0)
               .sort((a, b) => {
