@@ -50,14 +50,14 @@ const productMatchingPrompt = ai.definePrompt({
   input: { schema: AIProductMatchingInputSchema },
   output: { schema: AIProductMatchingOutputSchema },
   prompt: `You are the Lead Grouping Engine for Price Cart. 
-Your SOLE PURPOSE is to group identical physical products across Amazon, Flipkart, Meesho, and others into ONE group.
+Your SOLE PURPOSE is to group identical physical products across Amazon, Flipkart, Meesho, and others into groups for comparison.
 
 STRICT GROUPING RULES:
-1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles vary wildly. Ignore platform fluff like "Great Indian Festival", "Lowest Price", or seller codes. If they are the same physical model (e.g., iPhone 16), THEY MUST BE GROUPED.
-2. **PLATFORM DIVERSITY**: I want to see Amazon, Flipkart, and Meesho side-by-side. If you find a product on Amazon and a similar one on Flipkart, they are the SAME product. Group them.
-3. **MODEL OVER BRAND**: Prioritize storage (128GB, 256GB), color, and model numbers. 
-4. **NO SPLITTING**: It is better to have a slightly mismatched group than to show the same product in three separate cards. 
-5. **MINIMUM PLATFORMS**: Try to ensure every group contains listings from at least 3 different platforms if the data exists.
+1. **ULTRA-AGGRESSIVE FUZZY MATCHING**: Titles vary wildly across stores. Ignore platform fluff like "Great Indian Festival", "Lowest Price", "Deal of the Day", or seller codes. If they are the same physical model (e.g., iPhone 16), THEY MUST BE GROUPED.
+2. **PRIORITIZE CROSS-PLATFORM**: Your primary goal is to find listings for the same product on Amazon, Flipkart, and Meesho and group them together. 
+3. **MODEL IDENTIFICATION**: Use model numbers, storage capacities (128GB, 256GB), RAM, and specific colors to identify matches.
+4. **FALLBACK**: If a product doesn't have a cross-platform match, still include it in its own group. DO NOT DISCARD PRODUCTS. Every input product must end up in a group.
+5. **CANONICAL NAMING**: Create a clean, concise name for the group (e.g., "Apple iPhone 16 (Black, 128GB)").
 
 User Search Query: "{{{productQuery}}}"
 
@@ -66,7 +66,7 @@ Products to analyze:
 - [Store: {{this.platform}}] Title: {{{this.title}}} | Price: ₹{{this.price}}
 {{/each}}
 
-Group them aggressively. Show the user a true market comparison across at least 3 platforms per product.`
+Group all products into groups. Products that are the same physical item across different stores MUST be in the same group.`
 });
 
 const aiProductMatchingFlow = ai.defineFlow(
@@ -76,6 +76,9 @@ const aiProductMatchingFlow = ai.defineFlow(
     outputSchema: AIProductMatchingOutputSchema,
   },
   async (input) => {
+    if (!input.scrapedProducts || input.scrapedProducts.length === 0) {
+      return { matchedProductGroups: [] };
+    }
     const { output } = await productMatchingPrompt(input);
     return output!;
   }

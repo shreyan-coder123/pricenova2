@@ -67,13 +67,24 @@ function SearchResults() {
               scrapedProducts: scraped,
             });
             
-            const validGroups = (matched?.matchedProductGroups || [])
-              .filter(g => g.products && g.products.length > 0)
-              .sort((a, b) => {
-                const storesA = new Set(a.products.map(p => p.platform)).size;
-                const storesB = new Set(b.products.map(p => p.platform)).size;
-                return storesB - storesA;
-              });
+            let validGroups = (matched?.matchedProductGroups || [])
+              .filter(g => g.products && g.products.length > 0);
+
+            // Fallback: If AI failed to group products or returned nothing, 
+            // group products individually so we show something.
+            if (validGroups.length === 0) {
+              validGroups = scraped.map(p => ({
+                canonicalProductName: p.title,
+                products: [p]
+              }));
+            }
+
+            // Sort groups: Priority to those with most platform variety
+            validGroups.sort((a, b) => {
+              const storesA = new Set(a.products.map(p => p.platform)).size;
+              const storesB = new Set(b.products.map(p => p.platform)).size;
+              return storesB - storesA;
+            });
             
             setMatchingResults({ matchedProductGroups: validGroups });
 
@@ -96,18 +107,28 @@ function SearchResults() {
                 }))
               );
 
+              // Limit insights to top 10 products to avoid payload limits
               const aiInsights = await aiShoppingInsights({
-                productData: insightInput,
+                productData: insightInput.slice(0, 15),
                 searchQuery: query
               });
               setInsights(aiInsights);
             }
           } catch (aiError) {
             console.warn('AI analysis deferred:', aiError);
+            // On AI failure, fallback to raw grouping
+            const fallbackGroups = scraped.map(p => ({
+              canonicalProductName: p.title,
+              products: [p]
+            }));
+            setMatchingResults({ matchedProductGroups: fallbackGroups });
           }
+        } else {
+          setMatchingResults({ matchedProductGroups: [] });
         }
       } catch (error) {
         console.error('Deep scan interrupted:', error);
+        setMatchingResults({ matchedProductGroups: [] });
       } finally {
         setLoading(false);
       }
@@ -180,10 +201,10 @@ function SearchResults() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold font-headline">{group.canonicalProductName}</h2>
-                  <p className="text-sm text-muted-foreground">Matched across {new Set(group.products.map(p => p.platform)).size} unique platforms.</p>
+                  <p className="text-sm text-muted-foreground">Available at {new Set(group.products.map(p => p.platform)).size} unique platform(s).</p>
                 </div>
                 <Badge variant="outline" className="w-fit border-primary/30 text-primary py-1 px-4 text-sm font-bold">
-                  {group.products.length} Offers Grouped
+                  {group.products.length} Listing(s) Found
                 </Badge>
               </div>
               
@@ -192,7 +213,7 @@ function SearchResults() {
                   <ProductCard 
                     key={pIdx} 
                     product={product} 
-                    isBestDeal={pIdx === 0} 
+                    isBestDeal={pIdx === 0 && group.products.length > 1} 
                     allOffers={group.products}
                     canonicalName={group.canonicalProductName}
                   />
@@ -206,7 +227,7 @@ function SearchResults() {
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold font-headline">No matching offers found</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">Try a broader search query to help our AI find cross-platform matches.</p>
+            <p className="text-muted-foreground max-w-sm mx-auto">Try a broader search query or check back later. We're constantly expanding our store network.</p>
             <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">New Scan</Button>
           </div>
         )}
@@ -232,7 +253,7 @@ function ProductCard({
 
   return (
     <Card className={`group relative h-full glass-card hover:border-primary/50 transition-all duration-300 ${isBestDeal ? 'ring-2 ring-primary/40' : ''}`}>
-      {isBestDeal && sortedOffers.length > 1 && (
+      {isBestDeal && (
         <div className="absolute -top-3 left-4 z-20 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
           Best Price Across Market
         </div>
@@ -347,7 +368,7 @@ function ProductCard({
                             <TableCell className="font-bold">
                               <div className="flex items-center gap-2">
                                 {offer.platform}
-                                {offer.price === minPrice && (
+                                {offer.price === minPrice && sortedOffers.length > 1 && (
                                   <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] px-1 py-0 uppercase">Best Deal</Badge>
                                 )}
                               </div>
